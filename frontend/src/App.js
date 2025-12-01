@@ -165,6 +165,7 @@ function App() {
     const isValid = await verifyPassword(password);
     if (isValid) {
       setIsAuthenticated(true);
+      sessionStorage.setItem(`roomPassword_${currentRoom.code}`, password);
       setShowPasswordDialog(false);
       toast.success("Autenticado com sucesso!");
       if (pendingAction) {
