@@ -203,6 +203,7 @@ function App() {
 
     try {
       const taskData = {
+        roomCode: currentRoom.code,
         date: selectedDate,
         type: newTask.type,
         title: newTask.title,
@@ -210,8 +211,11 @@ function App() {
         description: newTask.type === "task" ? newTask.description : null
       };
 
+      // Get stored password for this session
+      const storedPassword = sessionStorage.getItem(`roomPassword_${currentRoom.code}`);
+      
       const response = await axios.post(`${API}/tasks`, taskData, {
-        headers: { password: "ag3nd@_3sc0l@r123" }
+        headers: { password: storedPassword }
       });
 
       // Upload files if any
@@ -220,11 +224,12 @@ function App() {
           const formData = new FormData();
           formData.append("file", file);
           formData.append("taskId", response.data.id);
+          formData.append("roomCode", currentRoom.code);
           
           await axios.post(`${API}/upload`, formData, {
             headers: {
               "Content-Type": "multipart/form-data",
-              password: "ag3nd@_3sc0l@r123"
+              password: storedPassword
             }
           });
         }
@@ -234,7 +239,7 @@ function App() {
       setShowAddTask(false);
       setNewTask({ type: "task", title: "", subject: "", description: "" });
       setUploadFiles([]);
-      loadTasks();
+      loadTasks(currentRoom.code);
     } catch (error) {
       toast.error("Erro ao adicionar tarefa!");
     }
