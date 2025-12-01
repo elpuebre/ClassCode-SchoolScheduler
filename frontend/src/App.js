@@ -151,7 +151,10 @@ function App() {
 
   const verifyPassword = async (pwd) => {
     try {
-      const response = await axios.post(`${API}/auth/verify`, { password: pwd });
+      const response = await axios.post(`${API}/auth/verify`, { 
+        password: pwd,
+        roomCode: currentRoom.code 
+      });
       return response.data.valid;
     } catch (error) {
       return false;
