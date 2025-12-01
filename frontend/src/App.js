@@ -209,6 +209,16 @@ function App() {
     return "";
   };
 
+  const isToday = (day) => {
+    const today = new Date();
+    const checkDate = formatDate(day);
+    const todayDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    
+    return checkDate === todayDate && 
+           currentMonth.getMonth() === today.getMonth() && 
+           currentMonth.getFullYear() === today.getFullYear();
+  };
+
   const handleDayClick = (day) => {
     const date = formatDate(day);
     setSelectedDate(date);
