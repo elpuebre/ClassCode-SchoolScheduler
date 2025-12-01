@@ -335,44 +335,184 @@ function App() {
   const days = getDaysInMonth(currentMonth);
   const selectedTasks = selectedDate ? getTasksForDate(selectedDate) : [];
 
+  // Room Selection Screen
+  if (showRoomSelection) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center p-6">
+        <Toaster position="top-center" richColors />
+        
+        <div className="absolute top-6 right-6">
+          <div className="flex items-center gap-2">
+            <Sun className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+            <Switch
+              data-testid="theme-toggle"
+              checked={darkMode}
+              onCheckedChange={toggleTheme}
+            />
+            <Moon className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+          </div>
+        </div>
+        
+        <div className="max-w-md w-full">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-semibold text-slate-900 dark:text-white mb-2">Agenda Escolar</h1>
+            <p className="text-slate-600 dark:text-slate-400">Organize suas tarefas em salas compartilhadas</p>
+          </div>
+          
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-8 space-y-4">
+            <Button
+              data-testid="create-room-button"
+              onClick={() => setShowCreateRoom(true)}
+              className="w-full h-14 text-lg"
+            >
+              Criar Sala
+            </Button>
+            <Button
+              data-testid="join-room-button"
+              onClick={() => setShowJoinRoom(true)}
+              variant="outline"
+              className="w-full h-14 text-lg"
+            >
+              Entrar em uma Sala
+            </Button>
+          </div>
+        </div>
+        
+        {/* Create Room Dialog */}
+        <Dialog open={showCreateRoom} onOpenChange={setShowCreateRoom}>
+          <DialogContent data-testid="create-room-dialog">
+            <DialogHeader>
+              <DialogTitle>Criar Nova Sala</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <Label htmlFor="room-name">Nome da Sala (máx. 32 caracteres)</Label>
+                <Input
+                  data-testid="room-name-input"
+                  id="room-name"
+                  value={roomName}
+                  onChange={(e) => setRoomName(e.target.value)}
+                  placeholder="Ex: 9A Colégio CEPMG - HCR"
+                  maxLength={32}
+                />
+              </div>
+              <Button data-testid="create-room-submit" onClick={handleCreateRoom} className="w-full">
+                Continuar
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Set Password Dialog */}
+        <Dialog open={showSetPassword} onOpenChange={setShowSetPassword}>
+          <DialogContent data-testid="set-password-dialog">
+            <DialogHeader>
+              <DialogTitle>Definir Senha da Sala</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <Label htmlFor="room-password">Senha para Edição (máx. 16 caracteres)</Label>
+                <Input
+                  data-testid="room-password-input"
+                  id="room-password"
+                  type="password"
+                  value={roomPassword}
+                  onChange={(e) => setRoomPassword(e.target.value)}
+                  placeholder="Crie uma senha"
+                  maxLength={16}
+                />
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                  Esta senha será necessária para editar tarefas nesta sala
+                </p>
+              </div>
+              <Button data-testid="set-password-submit" onClick={handleSetPassword} className="w-full">
+                Criar Sala
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Join Room Dialog */}
+        <Dialog open={showJoinRoom} onOpenChange={setShowJoinRoom}>
+          <DialogContent data-testid="join-room-dialog">
+            <DialogHeader>
+              <DialogTitle>Entrar em uma Sala</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <Label htmlFor="room-code">Código da Sala</Label>
+                <Input
+                  data-testid="room-code-input"
+                  id="room-code"
+                  value={roomCode}
+                  onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+                  placeholder="Ex: 9AXKQ2H"
+                  maxLength={7}
+                />
+              </div>
+              <Button data-testid="join-room-submit" onClick={handleJoinRoom} className="w-full">
+                Entrar
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <Toaster position="top-center" richColors />
       
       {/* Header */}
       <header className="border-b border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Agenda Escolar</h1>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">Organize suas tarefas e compromissos</p>
-          </div>
-          <div className="flex items-center gap-4">
-            {isAuthenticated && (
-              <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
-                <Lock className="w-4 h-4" />
-                Autenticado
-              </div>
-            )}
-            {!isAuthenticated && (
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Agenda Escolar</h1>
+              {currentRoom && (
+                <div className="mt-2 text-sm">
+                  <p className="text-slate-700 dark:text-slate-300 font-medium">{currentRoom.name}</p>
+                  <p className="text-slate-500 dark:text-slate-400">Código: {currentRoom.code}</p>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-4">
+              {isAuthenticated && (
+                <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                  <Lock className="w-4 h-4" />
+                  Autenticado
+                </div>
+              )}
+              {!isAuthenticated && (
+                <Button
+                  data-testid="auth-button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowPasswordDialog(true)}
+                  className="gap-2"
+                >
+                  <Lock className="w-4 h-4" />
+                  Entrar para Editar
+                </Button>
+              )}
               <Button
-                data-testid="auth-button"
+                data-testid="leave-room-button"
                 variant="outline"
                 size="sm"
-                onClick={() => setShowPasswordDialog(true)}
-                className="gap-2"
+                onClick={handleLeaveRoom}
               >
-                <Lock className="w-4 h-4" />
-                Entrar para Editar
+                Sair da Sala
               </Button>
-            )}
-            <div className="flex items-center gap-2">
-              <Sun className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-              <Switch
-                data-testid="theme-toggle"
-                checked={darkMode}
-                onCheckedChange={toggleTheme}
-              />
-              <Moon className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+              <div className="flex items-center gap-2">
+                <Sun className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                <Switch
+                  data-testid="theme-toggle"
+                  checked={darkMode}
+                  onCheckedChange={toggleTheme}
+                />
+                <Moon className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+              </div>
             </div>
           </div>
         </div>
