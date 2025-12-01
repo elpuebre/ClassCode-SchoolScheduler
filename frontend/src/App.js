@@ -67,13 +67,75 @@ function App() {
     }
   }, [currentRoom]);
 
-  const loadTasks = async () => {
+  const loadTasks = async (roomCode) => {
     try {
-      const response = await axios.get(`${API}/tasks`);
+      const response = await axios.get(`${API}/tasks/${roomCode}`);
       setTasks(response.data);
     } catch (error) {
       console.error("Erro ao carregar tarefas:", error);
     }
+  };
+  
+  const handleCreateRoom = async () => {
+    if (!roomName || roomName.length > 32) {
+      toast.error("Nome da sala inválido (máximo 32 caracteres)!");
+      return;
+    }
+    setShowCreateRoom(false);
+    setShowSetPassword(true);
+  };
+  
+  const handleSetPassword = async () => {
+    if (!roomPassword || roomPassword.length > 16) {
+      toast.error("Senha inválida (máximo 16 caracteres)!");
+      return;
+    }
+    
+    try {
+      const response = await axios.post(`${API}/rooms/create`, {
+        name: roomName,
+        password: roomPassword
+      });
+      
+      const roomData = { code: response.data.code, name: response.data.name };
+      setCurrentRoom(roomData);
+      localStorage.setItem("currentRoom", JSON.stringify(roomData));
+      setShowSetPassword(false);
+      setShowRoomSelection(false);
+      toast.success(`Sala criada! Código: ${response.data.code}`);
+      setRoomName("");
+      setRoomPassword("");
+    } catch (error) {
+      toast.error("Erro ao criar sala!");
+    }
+  };
+  
+  const handleJoinRoom = async () => {
+    if (!roomCode) {
+      toast.error("Digite o código da sala!");
+      return;
+    }
+    
+    try {
+      const response = await axios.post(`${API}/rooms/join`, { code: roomCode });
+      const roomData = { code: response.data.code, name: response.data.name };
+      setCurrentRoom(roomData);
+      localStorage.setItem("currentRoom", JSON.stringify(roomData));
+      setShowJoinRoom(false);
+      setShowRoomSelection(false);
+      toast.success(`Bem-vindo à sala ${response.data.name}!`);
+      setRoomCode("");
+    } catch (error) {
+      toast.error("Sala não encontrada!");
+    }
+  };
+  
+  const handleLeaveRoom = () => {
+    setCurrentRoom(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem("currentRoom");
+    setShowRoomSelection(true);
+    setTasks([]);
   };
 
   const toggleTheme = () => {
