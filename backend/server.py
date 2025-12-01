@@ -34,10 +34,26 @@ UPLOAD_DIR = ROOT_DIR / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 # Define Models
+class Room(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    code: str
+    name: str
+    password: str
+    createdAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class RoomCreate(BaseModel):
+    name: str
+    password: str
+
+class RoomJoin(BaseModel):
+    code: str
+
 class Task(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    roomCode: str
     date: str  # ISO date string YYYY-MM-DD
     type: str  # "task", "holiday", "recess"
     title: str
@@ -47,6 +63,7 @@ class Task(BaseModel):
     createdAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class TaskCreate(BaseModel):
+    roomCode: str
     date: str
     type: str
     title: str
@@ -55,6 +72,7 @@ class TaskCreate(BaseModel):
 
 class PasswordVerify(BaseModel):
     password: str
+    roomCode: str
 
 class TaskFile(BaseModel):
     taskId: str
