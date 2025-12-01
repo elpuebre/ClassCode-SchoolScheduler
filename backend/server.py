@@ -210,7 +210,7 @@ async def upload_file(
     # Update task with file reference if taskId provided
     if taskId:
         await db.tasks.update_one(
-            {"id": taskId},
+            {"id": taskId, "roomCode": roomCode},
             {"$push": {"files": {"filename": unique_filename, "originalName": file.filename}}}
         )
     
