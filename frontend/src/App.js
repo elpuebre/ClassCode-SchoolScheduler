@@ -333,7 +333,8 @@ function App() {
                   ${!day ? "cursor-default" : ""}
                   ${getDayColor(day ? formatDate(day) : "")}
                   ${!getDayColor(day ? formatDate(day) : "") && day ? "hover:bg-slate-100 dark:hover:bg-slate-800" : ""}
-                  border-2 border-transparent
+                  ${day && isToday(day) ? "!border-slate-900 dark:!border-white !border-[3px]" : "border-2"}
+                  ${day && !isToday(day) && !getDayColor(formatDate(day)) ? "border-transparent" : ""}
                   ${day ? "bg-white dark:bg-slate-900" : ""}
                 `}
               >
