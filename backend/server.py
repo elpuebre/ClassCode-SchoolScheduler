@@ -86,17 +86,50 @@ class TaskFile(BaseModel):
     filename: str
     originalName: str
 
+# Create room
+@api_router.post("/rooms/create")
+async def create_room(input: RoomCreate):
+    if len(input.name) > 32:
+        raise HTTPException(status_code=400, detail="Nome da sala muito longo (máximo 32 caracteres)")
+    if len(input.password) > 16:
+        raise HTTPException(status_code=400, detail="Senha muito longa (máximo 16 caracteres)")
+    
+    code = generate_room_code()
+    
+    room_obj = Room(code=code, name=input.name, password=input.password)
+    doc = room_obj.model_dump()
+    doc['createdAt'] = doc['createdAt'].isoformat()
+    
+    await db.rooms.insert_one(doc)
+    
+    return {"code": code, "name": input.name}
+
+# Join room
+@api_router.post("/rooms/join")
+async def join_room(input: RoomJoin):
+    room = await db.rooms.find_one({"code": input.code}, {"_id": 0})
+    
+    if not room:
+        raise HTTPException(status_code=404, detail="Sala não encontrada")
+    
+    return {"code": room["code"], "name": room["name"]}
+
 # Verify password
 @api_router.post("/auth/verify")
 async def verify_password(input: PasswordVerify):
-    if input.password == EDIT_PASSWORD:
+    room = await db.rooms.find_one({"code": input.roomCode}, {"_id": 0})
+    
+    if not room:
+        raise HTTPException(status_code=404, detail="Sala não encontrada")
+    
+    if input.password == room["password"]:
         return {"valid": True}
     return {"valid": False}
 
-# Get all tasks
-@api_router.get("/tasks", response_model=List[Task])
-async def get_tasks():
-    tasks = await db.tasks.find({}, {"_id": 0}).to_list(10000)
+# Get all tasks for a room
+@api_router.get("/tasks/{room_code}", response_model=List[Task])
+async def get_tasks(room_code: str):
+    tasks = await db.tasks.find({"roomCode": room_code}, {"_id": 0}).to_list(10000)
     
     for task in tasks:
         if isinstance(task.get('createdAt'), str):
@@ -106,8 +139,14 @@ async def get_tasks():
 
 # Create task
 @api_router.post("/tasks", response_model=Task)
-async def create_task(input: TaskCreate, password: Optional[str] = Header(None)):
-    if password != EDIT_PASSWORD:
+async def create_task(input: TaskCreate, password: Optional[str] = Header(None), roomcode: Optional[str] = Header(None)):
+    # Verify room exists
+    room = await db.rooms.find_one({"code": input.roomCode}, {"_id": 0})
+    if not room:
+        raise HTTPException(status_code=404, detail="Sala não encontrada")
+    
+    # Verify password
+    if password != room["password"]:
         raise HTTPException(status_code=403, detail="Senha inválida")
     
     task_obj = Task(**input.model_dump())
@@ -118,12 +157,17 @@ async def create_task(input: TaskCreate, password: Optional[str] = Header(None))
     return task_obj
 
 # Delete task
-@api_router.delete("/tasks/{task_id}")
-async def delete_task(task_id: str, password: Optional[str] = Header(None)):
-    if password != EDIT_PASSWORD:
+@api_router.delete("/tasks/{room_code}/{task_id}")
+async def delete_task(room_code: str, task_id: str, password: Optional[str] = Header(None)):
+    # Verify room and password
+    room = await db.rooms.find_one({"code": room_code}, {"_id": 0})
+    if not room:
+        raise HTTPException(status_code=404, detail="Sala não encontrada")
+    
+    if password != room["password"]:
         raise HTTPException(status_code=403, detail="Senha inválida")
     
-    result = await db.tasks.delete_one({"id": task_id})
+    result = await db.tasks.delete_one({"id": task_id, "roomCode": room_code})
     
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Tarefa não encontrada")
