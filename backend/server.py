@@ -179,9 +179,15 @@ async def delete_task(room_code: str, task_id: str, password: Optional[str] = He
 async def upload_file(
     file: UploadFile = File(...),
     taskId: str = None,
+    roomCode: str = None,
     password: Optional[str] = Header(None)
 ):
-    if password != EDIT_PASSWORD:
+    # Verify room and password
+    room = await db.rooms.find_one({"code": roomCode}, {"_id": 0})
+    if not room:
+        raise HTTPException(status_code=404, detail="Sala não encontrada")
+    
+    if password != room["password"]:
         raise HTTPException(status_code=403, detail="Senha inválida")
     
     # Check file size (750MB limit)
