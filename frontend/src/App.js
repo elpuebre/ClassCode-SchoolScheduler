@@ -16,6 +16,16 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 function App() {
+  const [currentRoom, setCurrentRoom] = useState(null);
+  const [showRoomSelection, setShowRoomSelection] = useState(true);
+  const [showCreateRoom, setShowCreateRoom] = useState(false);
+  const [showJoinRoom, setShowJoinRoom] = useState(false);
+  const [showSetPassword, setShowSetPassword] = useState(false);
+  const [roomName, setRoomName] = useState("");
+  const [roomPassword, setRoomPassword] = useState("");
+  const [roomCode, setRoomCode] = useState("");
+  const [tempRoomData, setTempRoomData] = useState(null);
+  
   const [tasks, setTasks] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
