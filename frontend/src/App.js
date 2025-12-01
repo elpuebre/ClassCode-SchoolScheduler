@@ -46,13 +46,26 @@ function App() {
   const [uploadFiles, setUploadFiles] = useState([]);
 
   useEffect(() => {
-    loadTasks();
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark") {
       setDarkMode(true);
       document.documentElement.classList.add("dark");
     }
+    
+    const savedRoom = localStorage.getItem("currentRoom");
+    if (savedRoom) {
+      const roomData = JSON.parse(savedRoom);
+      setCurrentRoom(roomData);
+      setShowRoomSelection(false);
+      loadTasks(roomData.code);
+    }
   }, []);
+  
+  useEffect(() => {
+    if (currentRoom) {
+      loadTasks(currentRoom.code);
+    }
+  }, [currentRoom]);
 
   const loadTasks = async () => {
     try {
