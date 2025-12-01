@@ -1,4 +1,5 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Header
+from fastapi.responses import FileResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -6,10 +7,10 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
-
+import shutil
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -25,46 +26,134 @@ app = FastAPI()
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+# Password for editing
+EDIT_PASSWORD = "ag3nd@_3sc0l@r123"
+
+# Upload directory
+UPLOAD_DIR = ROOT_DIR / "uploads"
+UPLOAD_DIR.mkdir(exist_ok=True)
 
 # Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
+class Task(BaseModel):
+    model_config = ConfigDict(extra="ignore")
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    date: str  # ISO date string YYYY-MM-DD
+    type: str  # "task", "holiday", "recess"
+    title: str
+    subject: Optional[str] = None
+    description: Optional[str] = None
+    files: List[str] = []  # List of file URLs/paths
+    createdAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-class StatusCheckCreate(BaseModel):
-    client_name: str
+class TaskCreate(BaseModel):
+    date: str
+    type: str
+    title: str
+    subject: Optional[str] = None
+    description: Optional[str] = None
 
-# Add your routes to the router instead of directly to app
-@api_router.get("/")
-async def root():
-    return {"message": "Hello World"}
+class PasswordVerify(BaseModel):
+    password: str
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
-    
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
-    
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
+class TaskFile(BaseModel):
+    taskId: str
+    filename: str
+    originalName: str
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
+# Verify password
+@api_router.post("/auth/verify")
+async def verify_password(input: PasswordVerify):
+    if input.password == EDIT_PASSWORD:
+        return {"valid": True}
+    return {"valid": False}
+
+# Get all tasks
+@api_router.get("/tasks", response_model=List[Task])
+async def get_tasks():
+    tasks = await db.tasks.find({}, {"_id": 0}).to_list(10000)
     
-    # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
+    for task in tasks:
+        if isinstance(task.get('createdAt'), str):
+            task['createdAt'] = datetime.fromisoformat(task['createdAt'])
     
-    return status_checks
+    return tasks
+
+# Create task
+@api_router.post("/tasks", response_model=Task)
+async def create_task(input: TaskCreate, password: Optional[str] = Header(None)):
+    if password != EDIT_PASSWORD:
+        raise HTTPException(status_code=403, detail="Senha inválida")
+    
+    task_obj = Task(**input.model_dump())
+    doc = task_obj.model_dump()
+    doc['createdAt'] = doc['createdAt'].isoformat()
+    
+    await db.tasks.insert_one(doc)
+    return task_obj
+
+# Delete task
+@api_router.delete("/tasks/{task_id}")
+async def delete_task(task_id: str, password: Optional[str] = Header(None)):
+    if password != EDIT_PASSWORD:
+        raise HTTPException(status_code=403, detail="Senha inválida")
+    
+    result = await db.tasks.delete_one({"id": task_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Tarefa não encontrada")
+    
+    return {"success": True}
+
+# Upload file
+@api_router.post("/upload")
+async def upload_file(
+    file: UploadFile = File(...),
+    taskId: str = None,
+    password: Optional[str] = Header(None)
+):
+    if password != EDIT_PASSWORD:
+        raise HTTPException(status_code=403, detail="Senha inválida")
+    
+    # Check file size (750MB limit)
+    file.file.seek(0, 2)
+    file_size = file.file.tell()
+    file.file.seek(0)
+    
+    if file_size > 750 * 1024 * 1024:  # 750MB in bytes
+        raise HTTPException(status_code=413, detail="Arquivo muito grande (máximo 750MB)")
+    
+    # Generate unique filename
+    file_ext = Path(file.filename).suffix
+    unique_filename = f"{uuid.uuid4()}{file_ext}"
+    file_path = UPLOAD_DIR / unique_filename
+    
+    # Save file
+    with file_path.open("wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    # Update task with file reference if taskId provided
+    if taskId:
+        await db.tasks.update_one(
+            {"id": taskId},
+            {"$push": {"files": {"filename": unique_filename, "originalName": file.filename}}}
+        )
+    
+    return {
+        "filename": unique_filename,
+        "originalName": file.filename,
+        "url": f"/api/files/{unique_filename}"
+    }
+
+# Download file
+@api_router.get("/files/{filename}")
+async def download_file(filename: str):
+    file_path = UPLOAD_DIR / filename
+    
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Arquivo não encontrado")
+    
+    return FileResponse(file_path)
 
 # Include the router in the main app
 app.include_router(api_router)
