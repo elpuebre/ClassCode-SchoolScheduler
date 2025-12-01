@@ -249,11 +249,12 @@ function App() {
   const handleDeleteTask = async (taskId) => {
     requireAuth(async () => {
       try {
-        await axios.delete(`${API}/tasks/${taskId}`, {
-          headers: { password: "ag3nd@_3sc0l@r123" }
+        const storedPassword = sessionStorage.getItem(`roomPassword_${currentRoom.code}`);
+        await axios.delete(`${API}/tasks/${currentRoom.code}/${taskId}`, {
+          headers: { password: storedPassword }
         });
         toast.success("Tarefa removida!");
-        loadTasks();
+        loadTasks(currentRoom.code);
       } catch (error) {
         toast.error("Erro ao remover tarefa!");
       }
