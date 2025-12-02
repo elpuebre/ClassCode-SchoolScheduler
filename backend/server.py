@@ -31,12 +31,12 @@ UPLOAD_DIR = ROOT_DIR / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 # Helper function to generate unique room code
-def generate_room_code():
+async def generate_room_code():
     import random
     import string
     while True:
         code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=7))
-        existing = db.rooms.find_one({"code": code})
+        existing = await db.rooms.find_one({"code": code})
         if not existing:
             return code
 
