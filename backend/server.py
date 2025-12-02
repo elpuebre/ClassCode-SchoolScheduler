@@ -94,7 +94,7 @@ async def create_room(input: RoomCreate):
     if len(input.password) > 16:
         raise HTTPException(status_code=400, detail="Senha muito longa (máximo 16 caracteres)")
     
-    code = generate_room_code()
+    code = await generate_room_code()
     
     room_obj = Room(code=code, name=input.name, password=input.password)
     doc = room_obj.model_dump()
