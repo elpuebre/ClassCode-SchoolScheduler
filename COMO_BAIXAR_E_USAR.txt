@@ -1,0 +1,127 @@
+═══════════════════════════════════════════════════════════════
+  CLASSCODE-SCHOOLSCHEDULER - COMO BAIXAR E USAR
+═══════════════════════════════════════════════════════════════
+
+📦 LOCALIZAÇÃO DOS ARQUIVOS
+─────────────────────────────────────────────────────────────
+
+Os arquivos do projeto estão em:
+
+1. Pasta completa:
+   /tmp/ClassCode-SchoolScheduler/
+
+2. Arquivo compactado ZIP:
+   /tmp/ClassCode-SchoolScheduler.zip (5.7 KB)
+
+3. Arquivo compactado TAR.GZ:
+   /tmp/ClassCode-SchoolScheduler.tar.gz (5.5 KB)
+
+
+📥 COMO BAIXAR NO EMERGENT
+─────────────────────────────────────────────────────────────
+
+OPÇÃO 1 - Pelo VS Code integrado:
+1. No menu lateral esquerdo, clique no ícone de arquivos
+2. Navegue até /tmp/
+3. Clique com botão direito em ClassCode-SchoolScheduler.zip
+4. Escolha "Download"
+
+OPÇÃO 2 - Pelo terminal:
+Se você tiver acesso SSH ou terminal:
+scp ou download direto do caminho /tmp/ClassCode-SchoolScheduler.zip
+
+
+📂 APÓS BAIXAR
+─────────────────────────────────────────────────────────────
+
+1. Extraia o arquivo ZIP no seu computador
+   (Clique direito > Extrair tudo)
+
+2. Você terá uma pasta: ClassCode-SchoolScheduler/
+
+3. Abra o arquivo: GUIA_COMPLETO_DEPLOY.md
+
+4. Siga o guia passo a passo (não pule nada!)
+
+
+📋 ESTRUTURA DO PROJETO
+─────────────────────────────────────────────────────────────
+
+ClassCode-SchoolScheduler/
+├── GUIA_COMPLETO_DEPLOY.md    ← COMECE POR AQUI!
+├── README.md
+├── DEPLOY_INSTRUCTIONS.md
+├── .gitignore
+├── backend/
+│   ├── __init__.py
+│   ├── requirements.txt       ← Apenas FastAPI + Uvicorn
+│   └── server.py              ← API com CORS já configurado
+└── frontend/
+    ├── src/
+    │   ├── App.jsx
+    │   ├── index.css
+    │   └── main.jsx
+    ├── index.html
+    ├── package.json
+    ├── vite.config.js
+    ├── tailwind.config.js
+    └── postcss.config.js
+
+
+✅ CONFIGURAÇÕES DO RENDER (RESUMO)
+─────────────────────────────────────────────────────────────
+
+BACKEND (Web Service):
+  Root Directory: backend
+  Build Command: pip install -r requirements.txt
+  Start Command: uvicorn server:app --host 0.0.0.0 --port $PORT
+  Runtime: Python 3
+
+FRONTEND (Static Site):
+  Root Directory: frontend
+  Build Command: npm install && npm run build
+  Publish Directory: dist
+  Environment Variable: VITE_BACKEND_URL = (URL do backend)
+
+
+🎯 ORDEM DE EXECUÇÃO
+─────────────────────────────────────────────────────────────
+
+1. Baixar arquivos
+2. Ler GUIA_COMPLETO_DEPLOY.md
+3. Criar conta GitHub (se não tiver)
+4. Instalar Git
+5. Subir projeto para GitHub
+6. Criar conta Render
+7. Deploy do backend primeiro
+8. Anotar URL do backend
+9. Deploy do frontend (com a URL do backend)
+10. Testar tudo
+
+
+⚠️ IMPORTANTE
+─────────────────────────────────────────────────────────────
+
+- NÃO modifique a estrutura de pastas
+- NÃO altere o requirements.txt
+- NÃO mude os comandos de build/start
+- SIGA o guia exatamente como está
+- TODOS os erros possíveis estão documentados
+
+
+📞 EM CASO DE DÚVIDA
+─────────────────────────────────────────────────────────────
+
+1. Consulte a seção "SOLUÇÃO DE PROBLEMAS" no guia
+2. Verifique os logs no Render
+3. Confirme que seguiu todos os passos
+4. Se ainda tiver problema, me envie:
+   - Qual passo deu erro
+   - Mensagem de erro completa
+   - Prints das configurações
+
+
+═══════════════════════════════════════════════════════════════
+Guia criado considerando todos os erros possíveis
+Última atualização: Dezembro 2024
+═══════════════════════════════════════════════════════════════
