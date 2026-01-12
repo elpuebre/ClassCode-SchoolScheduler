@@ -9,7 +9,7 @@ import { Textarea } from "./components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
 import { toast } from "sonner";
 import { Toaster } from "./components/ui/sonner";
-import { Moon, Sun, Lock, Trash2, Download, Upload, X } from "lucide-react";
+import { Moon, Sun, Lock, Trash2, Download, Upload, X, Eye, EyeOff, FileText, HelpCircle } from "lucide-react";
 import { Switch } from "./components/ui/switch";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -24,7 +24,9 @@ function App() {
   const [roomName, setRoomName] = useState("");
   const [roomPassword, setRoomPassword] = useState("");
   const [roomCode, setRoomCode] = useState("");
-  const [tempRoomData, setTempRoomData] = useState(null);
+  const [showRoomPasswordVisible, setShowRoomPasswordVisible] = useState(false);
+  const [showPasswordVisible, setShowPasswordVisible] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
   
   const [tasks, setTasks] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -105,6 +107,7 @@ function App() {
       toast.success(`Sala criada! Código: ${response.data.code}`);
       setRoomName("");
       setRoomPassword("");
+      setShowRoomPasswordVisible(false);
     } catch (error) {
       toast.error("Erro ao criar sala!");
     }
@@ -176,6 +179,7 @@ function App() {
       toast.error("Senha incorreta!");
     }
     setPassword("");
+    setShowPasswordVisible(false);
   };
 
   const requireAuth = (action) => {
@@ -212,14 +216,12 @@ function App() {
         description: newTask.type === "task" ? newTask.description : null
       };
 
-      // Get stored password for this session
       const storedPassword = sessionStorage.getItem(`roomPassword_${currentRoom.code}`);
       
       const response = await axios.post(`${API}/tasks`, taskData, {
         headers: { password: storedPassword }
       });
 
-      // Upload files if any
       if (uploadFiles.length > 0) {
         for (const file of uploadFiles) {
           const formData = new FormData();
@@ -335,6 +337,95 @@ function App() {
   const days = getDaysInMonth(currentMonth);
   const selectedTasks = selectedDate ? getTasksForDate(selectedDate) : [];
 
+  // Instructions Button Component
+  const InstructionsButton = () => (
+    <button
+      onClick={() => setShowInstructions(true)}
+      className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-105"
+      data-testid="instructions-button"
+    >
+      <FileText className="w-5 h-5" />
+      <span className="font-medium">Instruções</span>
+    </button>
+  );
+
+  // Instructions Dialog
+  const InstructionsDialog = () => (
+    <Dialog open={showInstructions} onOpenChange={setShowInstructions}>
+      <DialogContent data-testid="instructions-dialog" className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            <HelpCircle className="w-6 h-6 text-blue-600" />
+            Como usar a Agenda Escolar
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-6 py-4 text-slate-700 dark:text-slate-300">
+          <section>
+            <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-2">📚 O que é este site?</h3>
+            <p>A Agenda Escolar é um sistema de calendário compartilhado onde você pode organizar tarefas, feriados e recessos escolares em salas privadas.</p>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-2">🏠 Criando uma Sala</h3>
+            <ol className="list-decimal list-inside space-y-1">
+              <li>Clique em "Criar Sala" na tela inicial</li>
+              <li>Digite um nome para sua sala (ex: "9A CEPMG")</li>
+              <li>Crie uma senha para proteger as edições</li>
+              <li>Anote o código da sala gerado para compartilhar</li>
+            </ol>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-2">🚪 Entrando em uma Sala</h3>
+            <ol className="list-decimal list-inside space-y-1">
+              <li>Clique em "Entrar em uma Sala"</li>
+              <li>Digite o código de 7 caracteres da sala</li>
+              <li>Clique em "Entrar"</li>
+            </ol>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-2">📝 Adicionando Tarefas</h3>
+            <ol className="list-decimal list-inside space-y-1">
+              <li>Clique em um dia no calendário</li>
+              <li>Digite a senha da sala quando solicitado</li>
+              <li>Escolha o tipo: Tarefa, Feriado ou Recesso</li>
+              <li>Preencha os detalhes e clique em "Salvar"</li>
+            </ol>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-2">🎨 Cores do Calendário</h3>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded bg-blue-500/40 border-2 border-blue-500" />
+                <span>Azul = Tarefas/Provas</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded bg-green-500/40 border-2 border-green-500" />
+                <span>Verde = Feriados</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded bg-red-500/40 border-2 border-red-500" />
+                <span>Vermelho = Recesso</span>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-2">💡 Dicas</h3>
+            <ul className="list-disc list-inside space-y-1">
+              <li>Use o toggle no canto superior para mudar entre tema claro/escuro</li>
+              <li>Você pode anexar arquivos (PDFs, imagens) às tarefas</li>
+              <li>Compartilhe o código da sala com seus colegas</li>
+              <li>Qualquer pessoa com o código pode VER, mas só quem tem a senha pode EDITAR</li>
+            </ul>
+          </section>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
   // Room Selection Screen
   if (showRoomSelection) {
     return (
@@ -377,6 +468,10 @@ function App() {
             </Button>
           </div>
         </div>
+
+        {/* Instructions Button */}
+        <InstructionsButton />
+        <InstructionsDialog />
         
         {/* Create Room Dialog */}
         <Dialog open={showCreateRoom} onOpenChange={setShowCreateRoom}>
@@ -412,15 +507,26 @@ function App() {
             <div className="space-y-4 py-4">
               <div>
                 <Label htmlFor="room-password">Senha para Edição (máx. 16 caracteres)</Label>
-                <Input
-                  data-testid="room-password-input"
-                  id="room-password"
-                  type="password"
-                  value={roomPassword}
-                  onChange={(e) => setRoomPassword(e.target.value)}
-                  placeholder="Crie uma senha"
-                  maxLength={16}
-                />
+                <div className="relative">
+                  <Input
+                    data-testid="room-password-input"
+                    id="room-password"
+                    type={showRoomPasswordVisible ? "text" : "password"}
+                    value={roomPassword}
+                    onChange={(e) => setRoomPassword(e.target.value)}
+                    placeholder="Crie uma senha"
+                    maxLength={16}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowRoomPasswordVisible(!showRoomPasswordVisible)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                    data-testid="toggle-room-password-visibility"
+                  >
+                    {showRoomPasswordVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
                   Esta senha será necessária para editar tarefas nesta sala
                 </p>
@@ -612,6 +718,10 @@ function App() {
         </div>
       </main>
 
+      {/* Instructions Button */}
+      <InstructionsButton />
+      <InstructionsDialog />
+
       {/* Password Dialog */}
       <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
         <DialogContent data-testid="password-dialog">
@@ -621,15 +731,26 @@ function App() {
           <div className="space-y-4 py-4">
             <div>
               <Label htmlFor="password">Senha</Label>
-              <Input
-                data-testid="password-input"
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handlePasswordSubmit()}
-                placeholder="Digite a senha"
-              />
+              <div className="relative">
+                <Input
+                  data-testid="password-input"
+                  id="password"
+                  type={showPasswordVisible ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handlePasswordSubmit()}
+                  placeholder="Digite a senha"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordVisible(!showPasswordVisible)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                  data-testid="toggle-password-visibility"
+                >
+                  {showPasswordVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
             <Button data-testid="password-submit" onClick={handlePasswordSubmit} className="w-full">
               Confirmar
