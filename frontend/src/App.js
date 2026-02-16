@@ -9,13 +9,226 @@ import { Textarea } from "./components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
 import { toast } from "sonner";
 import { Toaster } from "./components/ui/sonner";
-import { Moon, Sun, Lock, Trash2, Download, Upload, X, Eye, EyeOff, FileText, HelpCircle } from "lucide-react";
+import { Moon, Sun, Lock, Trash2, Download, Upload, X, Eye, EyeOff, FileText, HelpCircle, Heart, Globe, Bell, Loader2 } from "lucide-react";
 import { Switch } from "./components/ui/switch";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Translations
+const translations = {
+  pt: {
+    title: "Agenda Escolar",
+    subtitle: "Organize suas tarefas em salas compartilhadas",
+    createRoom: "Criar Sala",
+    joinRoom: "Entrar em uma Sala",
+    createNewRoom: "Criar Nova Sala",
+    roomName: "Nome da Sala",
+    roomNamePlaceholder: "Ex: 9A Colégio CEPMG",
+    maxChars: "máx. {n} caracteres",
+    continue: "Continuar",
+    setPassword: "Definir Senha da Sala",
+    passwordForEdit: "Senha para Edição",
+    createPasswordPlaceholder: "Crie uma senha",
+    passwordNote: "Esta senha será necessária para editar tarefas",
+    joinRoomTitle: "Entrar em uma Sala",
+    roomCode: "Código da Sala",
+    roomCodePlaceholder: "Ex: 9AXKQ2H",
+    enter: "Entrar",
+    code: "Código",
+    authenticated: "Autenticado",
+    enterToEdit: "Editar",
+    leaveRoom: "Sair",
+    enterPassword: "Insira a senha para editar",
+    password: "Senha",
+    passwordPlaceholder: "Digite a senha",
+    confirm: "Confirmar",
+    addFor: "Adicionar para",
+    type: "Tipo",
+    task: "Tarefa",
+    holiday: "Feriado",
+    recess: "Recesso",
+    titleField: "Título",
+    titlePlaceholder: "Ex: Prova de Matemática",
+    subject: "Matéria",
+    subjectPlaceholder: "Ex: Matemática",
+    description: "Descrição",
+    descriptionPlaceholder: "Detalhes sobre a tarefa...",
+    optional: "opcional",
+    required: "obrigatório",
+    files: "Arquivos",
+    addFile: "Adicionar arquivo",
+    save: "Salvar",
+    saving: "Salvando...",
+    tasksFor: "Tarefas de",
+    addAnotherTask: "Adicionar outra tarefa",
+    instructions: "Ajuda",
+    howToUse: "Como usar a Agenda Escolar",
+    whatIsThis: "O que é este site?",
+    whatIsThisText: "A Agenda Escolar é um sistema de calendário compartilhado onde você pode organizar tarefas, feriados e recessos escolares em salas privadas.",
+    creatingRoom: "Criando uma Sala",
+    creatingRoomSteps: ["Clique em \"Criar Sala\" na tela inicial", "Digite um nome para sua sala", "Crie uma senha para proteger as edições", "Anote o código da sala gerado para compartilhar"],
+    joiningRoom: "Entrando em uma Sala",
+    joiningRoomSteps: ["Clique em \"Entrar em uma Sala\"", "Digite o código de 7 caracteres", "Clique em \"Entrar\""],
+    addingTasks: "Adicionando Tarefas",
+    addingTasksSteps: ["Clique em um dia no calendário", "Digite a senha da sala", "Escolha o tipo: Tarefa, Feriado ou Recesso", "Preencha os detalhes e salve"],
+    calendarColors: "Cores do Calendário",
+    blueTask: "Azul = Tarefas/Provas",
+    greenHoliday: "Verde = Feriados",
+    redRecess: "Vermelho = Recesso",
+    tips: "Dicas",
+    tipsList: ["Use o toggle para mudar entre tema claro/escuro", "Você pode anexar arquivos às tarefas", "Compartilhe o código com seus colegas", "Qualquer pessoa pode VER, mas só quem tem a senha pode EDITAR"],
+    tasks: "Tarefas",
+    holidays: "Feriados",
+    roomCreated: "Sala criada! Código:",
+    welcome: "Bem-vindo à sala",
+    roomNotFound: "Sala não encontrada!",
+    invalidRoomName: "Nome da sala inválido!",
+    invalidPassword: "Senha inválida!",
+    errorCreatingRoom: "Erro ao criar sala!",
+    authSuccess: "Autenticado com sucesso!",
+    wrongPassword: "Senha incorreta!",
+    titleRequired: "Título é obrigatório!",
+    subjectRequired: "Matéria é obrigatória para tarefas!",
+    taskAdded: "Tarefa adicionada com sucesso!",
+    errorAddingTask: "Erro ao adicionar tarefa!",
+    taskRemoved: "Tarefa removida!",
+    errorRemovingTask: "Erro ao remover tarefa!",
+    donate: "Apoiar",
+    donateTitle: "Apoie o Projeto",
+    donateText: "Essa ferramenta te ajudou? A Agenda Escolar é criada e mantida de forma independente. Se quiser apoiar o projeto e ajudar a manter o site online, qualquer valor é bem-vindo.",
+    pixKey: "Chave PIX",
+    copyPix: "Copiar",
+    pixCopied: "Chave PIX copiada!",
+    orScanQR: "Ou escaneie o QR Code:",
+    announcements: "Avisos",
+    announcementsTitle: "Avisos Gerais",
+    noAnnouncements: "Nenhum aviso no momento.",
+    announcementsList: [
+      "🎉 Bem-vindo à Agenda Escolar! Compartilhe o código da sua sala com seus colegas.",
+      "💡 Dica: Você pode anexar PDFs e imagens às suas tarefas.",
+      "🔒 Lembre-se: apenas quem tem a senha pode editar as tarefas."
+    ],
+    loading: "Carregando...",
+    creating: "Criando...",
+    joining: "Entrando...",
+    monthNames: ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"],
+    weekDays: ["D", "S", "T", "Q", "Q", "S", "S"],
+    weekDaysFull: ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
+  },
+  en: {
+    title: "School Schedule",
+    subtitle: "Organize your tasks in shared rooms",
+    createRoom: "Create Room",
+    joinRoom: "Join Room",
+    createNewRoom: "Create New Room",
+    roomName: "Room Name",
+    roomNamePlaceholder: "Ex: 9A School",
+    maxChars: "max. {n} characters",
+    continue: "Continue",
+    setPassword: "Set Room Password",
+    passwordForEdit: "Password for Editing",
+    createPasswordPlaceholder: "Create a password",
+    passwordNote: "This password will be required to edit tasks",
+    joinRoomTitle: "Join a Room",
+    roomCode: "Room Code",
+    roomCodePlaceholder: "Ex: 9AXKQ2H",
+    enter: "Enter",
+    code: "Code",
+    authenticated: "Authenticated",
+    enterToEdit: "Edit",
+    leaveRoom: "Leave",
+    enterPassword: "Enter password to edit",
+    password: "Password",
+    passwordPlaceholder: "Enter password",
+    confirm: "Confirm",
+    addFor: "Add for",
+    type: "Type",
+    task: "Task",
+    holiday: "Holiday",
+    recess: "Break",
+    titleField: "Title",
+    titlePlaceholder: "Ex: Math Test",
+    subject: "Subject",
+    subjectPlaceholder: "Ex: Math",
+    description: "Description",
+    descriptionPlaceholder: "Task details...",
+    optional: "optional",
+    required: "required",
+    files: "Files",
+    addFile: "Add file",
+    save: "Save",
+    saving: "Saving...",
+    tasksFor: "Tasks for",
+    addAnotherTask: "Add another task",
+    instructions: "Help",
+    howToUse: "How to use School Schedule",
+    whatIsThis: "What is this site?",
+    whatIsThisText: "School Schedule is a shared calendar system where you can organize tasks, holidays and school breaks in private rooms.",
+    creatingRoom: "Creating a Room",
+    creatingRoomSteps: ["Click \"Create Room\" on the home screen", "Enter a name for your room", "Create a password to protect edits", "Note the generated room code to share"],
+    joiningRoom: "Joining a Room",
+    joiningRoomSteps: ["Click \"Join a Room\"", "Enter the 7-character room code", "Click \"Enter\""],
+    addingTasks: "Adding Tasks",
+    addingTasksSteps: ["Click on a day in the calendar", "Enter the room password", "Choose the type: Task, Holiday or Break", "Fill in the details and save"],
+    calendarColors: "Calendar Colors",
+    blueTask: "Blue = Tasks/Tests",
+    greenHoliday: "Green = Holidays",
+    redRecess: "Red = Break",
+    tips: "Tips",
+    tipsList: ["Use the toggle to switch between light/dark theme", "You can attach files to tasks", "Share the room code with your classmates", "Anyone can VIEW, but only those with the password can EDIT"],
+    tasks: "Tasks",
+    holidays: "Holidays",
+    roomCreated: "Room created! Code:",
+    welcome: "Welcome to room",
+    roomNotFound: "Room not found!",
+    invalidRoomName: "Invalid room name!",
+    invalidPassword: "Invalid password!",
+    errorCreatingRoom: "Error creating room!",
+    authSuccess: "Authenticated successfully!",
+    wrongPassword: "Wrong password!",
+    titleRequired: "Title is required!",
+    subjectRequired: "Subject is required for tasks!",
+    taskAdded: "Task added successfully!",
+    errorAddingTask: "Error adding task!",
+    taskRemoved: "Task removed!",
+    errorRemovingTask: "Error removing task!",
+    donate: "Support",
+    donateTitle: "Support the Project",
+    donateText: "Did this tool help you? School Schedule is created and maintained independently. If you want to support the project and help keep the site online, any amount is welcome.",
+    pixKey: "PIX Key",
+    copyPix: "Copy",
+    pixCopied: "PIX key copied!",
+    orScanQR: "Or scan the QR Code:",
+    announcements: "News",
+    announcementsTitle: "General Announcements",
+    noAnnouncements: "No announcements at the moment.",
+    announcementsList: [
+      "🎉 Welcome to School Schedule! Share your room code with your classmates.",
+      "💡 Tip: You can attach PDFs and images to your tasks.",
+      "🔒 Remember: only those with the password can edit tasks."
+    ],
+    loading: "Loading...",
+    creating: "Creating...",
+    joining: "Joining...",
+    monthNames: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+    weekDays: ["S", "M", "T", "W", "T", "F", "S"],
+    weekDaysFull: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+  }
+};
+
+const getBrowserLanguage = () => {
+  const lang = navigator.language || navigator.userLanguage;
+  return lang.startsWith("pt") ? "pt" : "en";
+};
+
 function App() {
+  const [language, setLanguage] = useState(() => {
+    const saved = localStorage.getItem("language");
+    return saved || getBrowserLanguage();
+  });
+  const t = translations[language];
+  
   const [currentRoom, setCurrentRoom] = useState(null);
   const [showRoomSelection, setShowRoomSelection] = useState(true);
   const [showCreateRoom, setShowCreateRoom] = useState(false);
@@ -27,6 +240,8 @@ function App() {
   const [showRoomPasswordVisible, setShowRoomPasswordVisible] = useState(false);
   const [showPasswordVisible, setShowPasswordVisible] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [showDonate, setShowDonate] = useState(false);
+  const [showAnnouncements, setShowAnnouncements] = useState(false);
   
   const [tasks, setTasks] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -39,6 +254,11 @@ function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
   
+  // Loading states
+  const [isCreating, setIsCreating] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  
   const [newTask, setNewTask] = useState({
     type: "task",
     title: "",
@@ -46,6 +266,10 @@ function App() {
     description: ""
   });
   const [uploadFiles, setUploadFiles] = useState([]);
+
+  useEffect(() => {
+    localStorage.setItem("language", language);
+  }, [language]);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -74,13 +298,17 @@ function App() {
       const response = await axios.get(`${API}/tasks/${roomCode}`);
       setTasks(response.data);
     } catch (error) {
-      console.error("Erro ao carregar tarefas:", error);
+      console.error("Error loading tasks:", error);
     }
+  };
+
+  const toggleLanguage = () => {
+    setLanguage(prev => prev === "pt" ? "en" : "pt");
   };
   
   const handleCreateRoom = async () => {
     if (!roomName || roomName.length > 32) {
-      toast.error("Nome da sala inválido (máximo 32 caracteres)!");
+      toast.error(t.invalidRoomName);
       return;
     }
     setShowCreateRoom(false);
@@ -89,10 +317,11 @@ function App() {
   
   const handleSetPassword = async () => {
     if (!roomPassword || roomPassword.length > 16) {
-      toast.error("Senha inválida (máximo 16 caracteres)!");
+      toast.error(t.invalidPassword);
       return;
     }
     
+    setIsCreating(true);
     try {
       const response = await axios.post(`${API}/rooms/create`, {
         name: roomName,
@@ -104,21 +333,24 @@ function App() {
       localStorage.setItem("currentRoom", JSON.stringify(roomData));
       setShowSetPassword(false);
       setShowRoomSelection(false);
-      toast.success(`Sala criada! Código: ${response.data.code}`);
+      toast.success(`${t.roomCreated} ${response.data.code}`);
       setRoomName("");
       setRoomPassword("");
       setShowRoomPasswordVisible(false);
     } catch (error) {
-      toast.error("Erro ao criar sala!");
+      toast.error(t.errorCreatingRoom);
+    } finally {
+      setIsCreating(false);
     }
   };
   
   const handleJoinRoom = async () => {
     if (!roomCode) {
-      toast.error("Digite o código da sala!");
+      toast.error(t.roomNotFound);
       return;
     }
     
+    setIsJoining(true);
     try {
       const response = await axios.post(`${API}/rooms/join`, { code: roomCode });
       const roomData = { code: response.data.code, name: response.data.name };
@@ -126,10 +358,12 @@ function App() {
       localStorage.setItem("currentRoom", JSON.stringify(roomData));
       setShowJoinRoom(false);
       setShowRoomSelection(false);
-      toast.success(`Bem-vindo à sala ${response.data.name}!`);
+      toast.success(`${t.welcome} ${response.data.name}!`);
       setRoomCode("");
     } catch (error) {
-      toast.error("Sala não encontrada!");
+      toast.error(t.roomNotFound);
+    } finally {
+      setIsJoining(false);
     }
   };
   
@@ -170,13 +404,13 @@ function App() {
       setIsAuthenticated(true);
       sessionStorage.setItem(`roomPassword_${currentRoom.code}`, password);
       setShowPasswordDialog(false);
-      toast.success("Autenticado com sucesso!");
+      toast.success(t.authSuccess);
       if (pendingAction) {
         pendingAction();
         setPendingAction(null);
       }
     } else {
-      toast.error("Senha incorreta!");
+      toast.error(t.wrongPassword);
     }
     setPassword("");
     setShowPasswordVisible(false);
@@ -197,15 +431,16 @@ function App() {
 
   const handleSaveTask = async () => {
     if (!newTask.title) {
-      toast.error("Título é obrigatório!");
+      toast.error(t.titleRequired);
       return;
     }
 
     if (newTask.type === "task" && !newTask.subject) {
-      toast.error("Matéria é obrigatória para tarefas!");
+      toast.error(t.subjectRequired);
       return;
     }
 
+    setIsSaving(true);
     try {
       const taskData = {
         roomCode: currentRoom.code,
@@ -222,29 +457,38 @@ function App() {
         headers: { password: storedPassword }
       });
 
+      const taskId = response.data.id;
+
       if (uploadFiles.length > 0) {
         for (const file of uploadFiles) {
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("taskId", response.data.id);
-          formData.append("roomCode", currentRoom.code);
-          
-          await axios.post(`${API}/upload`, formData, {
-            headers: {
-              "Content-Type": "multipart/form-data",
-              password: storedPassword
-            }
-          });
+          try {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("taskId", taskId);
+            formData.append("roomCode", currentRoom.code);
+            
+            await axios.post(`${API}/upload`, formData, {
+              headers: {
+                "Content-Type": "multipart/form-data",
+                password: storedPassword
+              }
+            });
+          } catch (uploadError) {
+            console.error("File upload error:", uploadError);
+          }
         }
       }
 
-      toast.success("Tarefa adicionada com sucesso!");
+      toast.success(t.taskAdded);
       setShowAddTask(false);
       setNewTask({ type: "task", title: "", subject: "", description: "" });
       setUploadFiles([]);
-      loadTasks(currentRoom.code);
+      await loadTasks(currentRoom.code);
     } catch (error) {
-      toast.error("Erro ao adicionar tarefa!");
+      console.error("Error adding task:", error);
+      toast.error(t.errorAddingTask);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -255,12 +499,17 @@ function App() {
         await axios.delete(`${API}/tasks/${currentRoom.code}/${taskId}`, {
           headers: { password: storedPassword }
         });
-        toast.success("Tarefa removida!");
+        toast.success(t.taskRemoved);
         loadTasks(currentRoom.code);
       } catch (error) {
-        toast.error("Erro ao remover tarefa!");
+        toast.error(t.errorRemovingTask);
       }
     });
+  };
+
+  const copyPixKey = () => {
+    navigator.clipboard.writeText("62999121460");
+    toast.success(t.pixCopied);
   };
 
   const getDaysInMonth = (date) => {
@@ -327,238 +576,185 @@ function App() {
     }
   };
 
-  const monthNames = [
-    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-  ];
-
-  const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-
   const days = getDaysInMonth(currentMonth);
   const selectedTasks = selectedDate ? getTasksForDate(selectedDate) : [];
-
-  // Instructions Button Component
-  const InstructionsButton = () => (
-    <button
-      onClick={() => setShowInstructions(true)}
-      className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-105"
-      data-testid="instructions-button"
-    >
-      <FileText className="w-5 h-5" />
-      <span className="font-medium">Instruções</span>
-    </button>
-  );
-
-  // Instructions Dialog
-  const InstructionsDialog = () => (
-    <Dialog open={showInstructions} onOpenChange={setShowInstructions}>
-      <DialogContent data-testid="instructions-dialog" className="max-w-2xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <HelpCircle className="w-6 h-6 text-blue-600" />
-            Como usar a Agenda Escolar
-          </DialogTitle>
-        </DialogHeader>
-        <div className="space-y-6 py-4 text-slate-700 dark:text-slate-300">
-          <section>
-            <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-2">📚 O que é este site?</h3>
-            <p>A Agenda Escolar é um sistema de calendário compartilhado onde você pode organizar tarefas, feriados e recessos escolares em salas privadas.</p>
-          </section>
-
-          <section>
-            <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-2">🏠 Criando uma Sala</h3>
-            <ol className="list-decimal list-inside space-y-1">
-              <li>Clique em "Criar Sala" na tela inicial</li>
-              <li>Digite um nome para sua sala (ex: "9A CEPMG")</li>
-              <li>Crie uma senha para proteger as edições</li>
-              <li>Anote o código da sala gerado para compartilhar</li>
-            </ol>
-          </section>
-
-          <section>
-            <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-2">🚪 Entrando em uma Sala</h3>
-            <ol className="list-decimal list-inside space-y-1">
-              <li>Clique em "Entrar em uma Sala"</li>
-              <li>Digite o código de 7 caracteres da sala</li>
-              <li>Clique em "Entrar"</li>
-            </ol>
-          </section>
-
-          <section>
-            <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-2">📝 Adicionando Tarefas</h3>
-            <ol className="list-decimal list-inside space-y-1">
-              <li>Clique em um dia no calendário</li>
-              <li>Digite a senha da sala quando solicitado</li>
-              <li>Escolha o tipo: Tarefa, Feriado ou Recesso</li>
-              <li>Preencha os detalhes e clique em "Salvar"</li>
-            </ol>
-          </section>
-
-          <section>
-            <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-2">🎨 Cores do Calendário</h3>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-blue-500/40 border-2 border-blue-500" />
-                <span>Azul = Tarefas/Provas</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-green-500/40 border-2 border-green-500" />
-                <span>Verde = Feriados</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-red-500/40 border-2 border-red-500" />
-                <span>Vermelho = Recesso</span>
-              </div>
-            </div>
-          </section>
-
-          <section>
-            <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-2">💡 Dicas</h3>
-            <ul className="list-disc list-inside space-y-1">
-              <li>Use o toggle no canto superior para mudar entre tema claro/escuro</li>
-              <li>Você pode anexar arquivos (PDFs, imagens) às tarefas</li>
-              <li>Compartilhe o código da sala com seus colegas</li>
-              <li>Qualquer pessoa com o código pode VER, mas só quem tem a senha pode EDITAR</li>
-            </ul>
-          </section>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
 
   // Room Selection Screen
   if (showRoomSelection) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center p-4">
         <Toaster position="top-center" richColors />
         
-        <div className="absolute top-6 right-6">
-          <div className="flex items-center gap-2">
+        {/* Header Controls */}
+        <div className="absolute top-4 right-4 flex items-center gap-2">
+          <button
+            onClick={toggleLanguage}
+            className="flex items-center gap-1 px-2 py-1 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+          >
+            <Globe className="w-4 h-4" />
+            <span>{language.toUpperCase()}</span>
+          </button>
+          <div className="flex items-center gap-1">
             <Sun className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-            <Switch
-              data-testid="theme-toggle"
-              checked={darkMode}
-              onCheckedChange={toggleTheme}
-            />
+            <Switch checked={darkMode} onCheckedChange={toggleTheme} />
             <Moon className="w-4 h-4 text-slate-600 dark:text-slate-400" />
           </div>
         </div>
         
         <div className="max-w-md w-full">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-semibold text-slate-900 dark:text-white mb-2">Agenda Escolar</h1>
-            <p className="text-slate-600 dark:text-slate-400">Organize suas tarefas em salas compartilhadas</p>
+          <div className="text-center mb-6">
+            <h1 className="text-3xl sm:text-4xl font-semibold text-slate-900 dark:text-white mb-2">{t.title}</h1>
+            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">{t.subtitle}</p>
           </div>
           
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-8 space-y-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-6 space-y-3">
             <Button
-              data-testid="create-room-button"
               onClick={() => setShowCreateRoom(true)}
-              className="w-full h-14 text-lg"
+              className="w-full h-12 text-base"
             >
-              Criar Sala
+              {t.createRoom}
             </Button>
             <Button
-              data-testid="join-room-button"
               onClick={() => setShowJoinRoom(true)}
               variant="outline"
-              className="w-full h-14 text-lg"
+              className="w-full h-12 text-base"
             >
-              Entrar em uma Sala
+              {t.joinRoom}
             </Button>
+          </div>
+          
+          {/* Bottom Buttons */}
+          <div className="flex justify-center gap-2 mt-6">
+            <button
+              onClick={() => setShowInstructions(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg text-sm"
+            >
+              <FileText className="w-4 h-4" />
+              <span>{t.instructions}</span>
+            </button>
           </div>
         </div>
 
-        {/* Instructions Button */}
-        <InstructionsButton />
-        <InstructionsDialog />
-        
-        {/* Create Room Dialog */}
+        {/* Dialogs */}
         <Dialog open={showCreateRoom} onOpenChange={setShowCreateRoom}>
-          <DialogContent data-testid="create-room-dialog">
+          <DialogContent className="max-w-[95vw] sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Criar Nova Sala</DialogTitle>
+              <DialogTitle>{t.createNewRoom}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div>
-                <Label htmlFor="room-name">Nome da Sala (máx. 32 caracteres)</Label>
+                <Label>{t.roomName} ({t.maxChars.replace("{n}", "32")})</Label>
                 <Input
-                  data-testid="room-name-input"
-                  id="room-name"
                   value={roomName}
                   onChange={(e) => setRoomName(e.target.value)}
-                  placeholder="Ex: 9A Colégio CEPMG - HCR"
+                  placeholder={t.roomNamePlaceholder}
                   maxLength={32}
                 />
               </div>
-              <Button data-testid="create-room-submit" onClick={handleCreateRoom} className="w-full">
-                Continuar
+              <Button onClick={handleCreateRoom} className="w-full">
+                {t.continue}
               </Button>
             </div>
           </DialogContent>
         </Dialog>
         
-        {/* Set Password Dialog */}
         <Dialog open={showSetPassword} onOpenChange={setShowSetPassword}>
-          <DialogContent data-testid="set-password-dialog">
+          <DialogContent className="max-w-[95vw] sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Definir Senha da Sala</DialogTitle>
+              <DialogTitle>{t.setPassword}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div>
-                <Label htmlFor="room-password">Senha para Edição (máx. 16 caracteres)</Label>
+                <Label>{t.passwordForEdit} ({t.maxChars.replace("{n}", "16")})</Label>
                 <div className="relative">
                   <Input
-                    data-testid="room-password-input"
-                    id="room-password"
                     type={showRoomPasswordVisible ? "text" : "password"}
                     value={roomPassword}
                     onChange={(e) => setRoomPassword(e.target.value)}
-                    placeholder="Crie uma senha"
+                    placeholder={t.createPasswordPlaceholder}
                     maxLength={16}
                     className="pr-10"
                   />
                   <button
                     type="button"
                     onClick={() => setShowRoomPasswordVisible(!showRoomPasswordVisible)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-                    data-testid="toggle-room-password-visibility"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
                   >
                     {showRoomPasswordVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                  Esta senha será necessária para editar tarefas nesta sala
-                </p>
+                <p className="text-xs text-slate-500 mt-2">{t.passwordNote}</p>
               </div>
-              <Button data-testid="set-password-submit" onClick={handleSetPassword} className="w-full">
-                Criar Sala
+              <Button onClick={handleSetPassword} className="w-full" disabled={isCreating}>
+                {isCreating ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t.creating}</>
+                ) : t.createRoom}
               </Button>
             </div>
           </DialogContent>
         </Dialog>
         
-        {/* Join Room Dialog */}
         <Dialog open={showJoinRoom} onOpenChange={setShowJoinRoom}>
-          <DialogContent data-testid="join-room-dialog">
+          <DialogContent className="max-w-[95vw] sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Entrar em uma Sala</DialogTitle>
+              <DialogTitle>{t.joinRoomTitle}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div>
-                <Label htmlFor="room-code">Código da Sala</Label>
+                <Label>{t.roomCode}</Label>
                 <Input
-                  data-testid="room-code-input"
-                  id="room-code"
                   value={roomCode}
                   onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                  placeholder="Ex: 9AXKQ2H"
+                  placeholder={t.roomCodePlaceholder}
                   maxLength={7}
                 />
               </div>
-              <Button data-testid="join-room-submit" onClick={handleJoinRoom} className="w-full">
-                Entrar
+              <Button onClick={handleJoinRoom} className="w-full" disabled={isJoining}>
+                {isJoining ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t.joining}</>
+                ) : t.enter}
               </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Instructions Dialog */}
+        <Dialog open={showInstructions} onOpenChange={setShowInstructions}>
+          <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <HelpCircle className="w-5 h-5 text-blue-600" />
+                {t.howToUse}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4 text-sm text-slate-700 dark:text-slate-300">
+              <section>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-1">📚 {t.whatIsThis}</h3>
+                <p>{t.whatIsThisText}</p>
+              </section>
+              <section>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-1">🏠 {t.creatingRoom}</h3>
+                <ol className="list-decimal list-inside space-y-1">
+                  {t.creatingRoomSteps.map((step, i) => <li key={i}>{step}</li>)}
+                </ol>
+              </section>
+              <section>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-1">🎨 {t.calendarColors}</h3>
+                <div className="flex flex-wrap gap-3">
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 rounded bg-blue-500/40 border border-blue-500" />
+                    <span className="text-xs">{t.tasks}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 rounded bg-green-500/40 border border-green-500" />
+                    <span className="text-xs">{t.holidays}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 rounded bg-red-500/40 border border-red-500" />
+                    <span className="text-xs">{t.recess}</span>
+                  </div>
+                </div>
+              </section>
             </div>
           </DialogContent>
         </Dialog>
@@ -566,194 +762,269 @@ function App() {
     );
   }
   
+  // Main Calendar Screen
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <Toaster position="top-center" richColors />
       
-      {/* Header */}
-      <header className="border-b border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Agenda Escolar</h1>
-              {currentRoom && (
-                <div className="mt-2 text-sm">
-                  <p className="text-slate-700 dark:text-slate-300 font-medium">{currentRoom.name}</p>
-                  <p className="text-slate-500 dark:text-slate-400">Código: {currentRoom.code}</p>
-                </div>
-              )}
+      {/* Header - Mobile Responsive */}
+      <header className="sticky top-0 z-40 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
+        <div className="px-3 sm:px-6 py-3">
+          <div className="flex justify-between items-center">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white truncate">{currentRoom?.name || t.title}</h1>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{t.code}: {currentRoom?.code}</p>
             </div>
-            <div className="flex items-center gap-4">
-              {isAuthenticated && (
-                <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
-                  <Lock className="w-4 h-4" />
-                  Autenticado
+            <div className="flex items-center gap-1 sm:gap-2 ml-2">
+              {isAuthenticated ? (
+                <div className="hidden sm:flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                  <Lock className="w-3 h-3" />
+                  <span className="hidden md:inline">{t.authenticated}</span>
                 </div>
-              )}
-              {!isAuthenticated && (
-                <Button
-                  data-testid="auth-button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowPasswordDialog(true)}
-                  className="gap-2"
-                >
-                  <Lock className="w-4 h-4" />
-                  Entrar para Editar
+              ) : (
+                <Button variant="outline" size="sm" onClick={() => setShowPasswordDialog(true)} className="text-xs px-2 h-8">
+                  <Lock className="w-3 h-3 sm:mr-1" />
+                  <span className="hidden sm:inline">{t.enterToEdit}</span>
                 </Button>
               )}
-              <Button
-                data-testid="leave-room-button"
-                variant="outline"
-                size="sm"
-                onClick={handleLeaveRoom}
-              >
-                Sair da Sala
+              <Button variant="outline" size="sm" onClick={handleLeaveRoom} className="text-xs px-2 h-8">
+                {t.leaveRoom}
               </Button>
-              <div className="flex items-center gap-2">
-                <Sun className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                <Switch
-                  data-testid="theme-toggle"
-                  checked={darkMode}
-                  onCheckedChange={toggleTheme}
-                />
-                <Moon className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-              </div>
+              <button onClick={toggleLanguage} className="p-1 text-slate-600 dark:text-slate-400">
+                <Globe className="w-4 h-4" />
+              </button>
+              <button onClick={toggleTheme} className="p-1 text-slate-600 dark:text-slate-400">
+                {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </button>
             </div>
           </div>
         </div>
       </header>
 
       {/* Calendar */}
-      <main className="max-w-6xl mx-auto px-6 py-8">
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-          {/* Calendar Header */}
-          <div className="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 px-6 py-6 flex justify-between items-center">
-            <button
-              data-testid="prev-month-button"
-              onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
-              className="text-white hover:bg-white/20 rounded-lg px-4 py-2 transition-colors"
-            >
-              ←
-            </button>
-            <h2 className="text-2xl font-semibold text-white">
-              {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
-            </h2>
-            <button
-              data-testid="next-month-button"
-              onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
-              className="text-white hover:bg-white/20 rounded-lg px-4 py-2 transition-colors"
-            >
-              →
-            </button>
-          </div>
-
-          {/* Week Days */}
-          <div className="grid grid-cols-7 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
-            {weekDays.map((day) => (
-              <div
-                key={day}
-                className="text-center py-3 text-sm font-medium text-slate-700 dark:text-slate-300"
+      <main className="px-2 sm:px-6 py-4 pb-24">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
+            {/* Calendar Header */}
+            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 px-3 sm:px-6 py-4 flex justify-between items-center">
+              <button
+                onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
+                className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
               >
-                {day}
-              </div>
-            ))}
-          </div>
-
-          {/* Calendar Days */}
-          <div className="grid grid-cols-7 p-2 gap-2">
-            {days.map((day, index) => (
-              <div
-                key={index}
-                data-testid={day ? `calendar-day-${formatDate(day)}` : undefined}
-                onClick={() => day && handleDayClick(day)}
-                className={`
-                  aspect-square p-3 rounded-lg cursor-pointer
-                  transition-all duration-200
-                  ${day ? "hover:shadow-md hover:scale-105" : ""}
-                  ${!day ? "cursor-default" : ""}
-                  ${getDayColor(day ? formatDate(day) : "")}
-                  ${!getDayColor(day ? formatDate(day) : "") && day ? "hover:bg-slate-100 dark:hover:bg-slate-800" : ""}
-                  ${day && isToday(day) ? "!border-slate-900 dark:!border-white !border-[3px]" : "border-2"}
-                  ${day && !isToday(day) && !getDayColor(formatDate(day)) ? "border-transparent" : ""}
-                  ${day ? "bg-white dark:bg-slate-900" : ""}
-                `}
+                ←
+              </button>
+              <h2 className="text-base sm:text-xl font-semibold text-white">
+                {t.monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+              </h2>
+              <button
+                onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
+                className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
               >
-                {day && (
-                  <div className="flex flex-col h-full">
-                    <span className="text-lg font-medium text-slate-900 dark:text-white">
+                →
+              </button>
+            </div>
+
+            {/* Week Days */}
+            <div className="grid grid-cols-7 bg-slate-50 dark:bg-slate-800">
+              {t.weekDays.map((day, i) => (
+                <div key={i} className="text-center py-2 text-xs font-medium text-slate-600 dark:text-slate-400">
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            {/* Calendar Days - Mobile Optimized */}
+            <div className="grid grid-cols-7 gap-[2px] p-1 sm:gap-1 sm:p-2">
+              {days.map((day, index) => (
+                <div
+                  key={index}
+                  onClick={() => day && handleDayClick(day)}
+                  className={`
+                    aspect-square p-1 sm:p-2 rounded cursor-pointer transition-all
+                    flex items-center justify-center
+                    ${day ? "hover:bg-slate-100 dark:hover:bg-slate-800" : ""}
+                    ${getDayColor(day ? formatDate(day) : "")}
+                    ${day && isToday(day) ? "ring-2 ring-slate-900 dark:ring-white" : ""}
+                    ${day ? "bg-white dark:bg-slate-900" : ""}
+                  `}
+                >
+                  {day && (
+                    <span className={`text-sm sm:text-base font-medium ${
+                      isToday(day) ? "text-blue-600 dark:text-blue-400 font-bold" : "text-slate-900 dark:text-white"
+                    }`}>
                       {day}
                     </span>
-                    {getTasksForDate(formatDate(day)).length > 0 && (
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        {getTasksForDate(formatDate(day)).slice(0, 2).map((task, i) => (
-                          <div
-                            key={i}
-                            className="w-1.5 h-1.5 rounded-full bg-current opacity-60"
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+                  )}
+                </div>
+              ))}
+            </div>
 
-        {/* Legend */}
-        <div className="mt-6 flex flex-wrap gap-6 justify-center text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-blue-500/40 border-2 border-blue-500" />
-            <span className="text-slate-700 dark:text-slate-300">Tarefas</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-green-500/40 border-2 border-green-500" />
-            <span className="text-slate-700 dark:text-slate-300">Feriados</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-red-500/40 border-2 border-red-500" />
-            <span className="text-slate-700 dark:text-slate-300">Recesso</span>
+            {/* Legend - Inside Calendar */}
+            <div className="px-3 py-2 border-t border-slate-200 dark:border-slate-800 flex justify-center gap-4 text-xs">
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded bg-blue-500" />
+                <span className="text-slate-600 dark:text-slate-400">{t.tasks}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded bg-green-500" />
+                <span className="text-slate-600 dark:text-slate-400">{t.holidays}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded bg-red-500" />
+                <span className="text-slate-600 dark:text-slate-400">{t.recess}</span>
+              </div>
+            </div>
           </div>
         </div>
       </main>
 
-      {/* Instructions Button */}
-      <InstructionsButton />
-      <InstructionsDialog />
+      {/* Floating Buttons - Mobile Optimized */}
+      <div className="fixed bottom-4 right-4 left-4 z-50 flex justify-center gap-2">
+        <button
+          onClick={() => setShowAnnouncements(true)}
+          className="flex items-center gap-1 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-full shadow-lg text-sm"
+        >
+          <Bell className="w-4 h-4" />
+          <span className="hidden sm:inline">{t.announcements}</span>
+        </button>
+        <button
+          onClick={() => setShowDonate(true)}
+          className="flex items-center gap-1 px-3 py-2 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-600 rounded-full shadow-lg text-sm"
+        >
+          <Heart className="w-4 h-4 text-red-500" />
+          <span className="hidden sm:inline">{t.donate}</span>
+        </button>
+        <button
+          onClick={() => setShowInstructions(true)}
+          className="flex items-center gap-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg text-sm"
+        >
+          <FileText className="w-4 h-4" />
+          <span className="hidden sm:inline">{t.instructions}</span>
+        </button>
+      </div>
+
+      {/* Announcements Dialog */}
+      <Dialog open={showAnnouncements} onOpenChange={setShowAnnouncements}>
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Bell className="w-5 h-5 text-amber-500" />
+              {t.announcementsTitle}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            {t.announcementsList.map((announcement, i) => (
+              <div key={i} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg text-sm">
+                {announcement}
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Donate Dialog */}
+      <Dialog open={showDonate} onOpenChange={setShowDonate}>
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Heart className="w-5 h-5 text-red-500" />
+              {t.donateTitle}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4 text-sm">
+            <p className="text-center text-slate-700 dark:text-slate-300">💙 {t.donateText}</p>
+            
+            <div className="bg-slate-100 dark:bg-slate-800 rounded-lg p-3">
+              <p className="text-xs font-medium mb-2">{t.pixKey}:</p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 bg-white dark:bg-slate-900 px-2 py-1 rounded text-sm font-mono">
+                  62999121460
+                </code>
+                <Button onClick={copyPixKey} size="sm" className="text-xs">
+                  {t.copyPix}
+                </Button>
+              </div>
+            </div>
+
+            <div className="text-center">
+              <p className="text-xs font-medium mb-2">{t.orScanQR}</p>
+              <div className="flex justify-center">
+                <img 
+                  src="https://customer-assets.emergentagent.com/job_school-schedule-11/artifacts/qwyda6mq_image.png" 
+                  alt="QR Code PIX"
+                  className="w-32 h-32 rounded-lg border"
+                />
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Instructions Dialog */}
+      <Dialog open={showInstructions} onOpenChange={setShowInstructions}>
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <HelpCircle className="w-5 h-5 text-blue-600" />
+              {t.howToUse}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4 text-sm text-slate-700 dark:text-slate-300">
+            <section>
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-1">📚 {t.whatIsThis}</h3>
+              <p>{t.whatIsThisText}</p>
+            </section>
+            <section>
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-1">🏠 {t.creatingRoom}</h3>
+              <ol className="list-decimal list-inside space-y-1">
+                {t.creatingRoomSteps.map((step, i) => <li key={i}>{step}</li>)}
+              </ol>
+            </section>
+            <section>
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-1">📝 {t.addingTasks}</h3>
+              <ol className="list-decimal list-inside space-y-1">
+                {t.addingTasksSteps.map((step, i) => <li key={i}>{step}</li>)}
+              </ol>
+            </section>
+            <section>
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-1">💡 {t.tips}</h3>
+              <ul className="list-disc list-inside space-y-1">
+                {t.tipsList.map((tip, i) => <li key={i}>{tip}</li>)}
+              </ul>
+            </section>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Password Dialog */}
       <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
-        <DialogContent data-testid="password-dialog">
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Insira a senha para editar</DialogTitle>
+            <DialogTitle>{t.enterPassword}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="password">Senha</Label>
+              <Label>{t.password}</Label>
               <div className="relative">
                 <Input
-                  data-testid="password-input"
-                  id="password"
                   type={showPasswordVisible ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handlePasswordSubmit()}
-                  placeholder="Digite a senha"
+                  placeholder={t.passwordPlaceholder}
                   className="pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPasswordVisible(!showPasswordVisible)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-                  data-testid="toggle-password-visibility"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
                 >
                   {showPasswordVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
-            <Button data-testid="password-submit" onClick={handlePasswordSubmit} className="w-full">
-              Confirmar
+            <Button onClick={handlePasswordSubmit} className="w-full">
+              {t.confirm}
             </Button>
           </div>
         </DialogContent>
@@ -761,97 +1032,76 @@ function App() {
 
       {/* Add Task Dialog */}
       <Dialog open={showAddTask} onOpenChange={setShowAddTask}>
-        <DialogContent data-testid="add-task-dialog" className="max-w-lg">
+        <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Adicionar para {selectedDate}</DialogTitle>
+            <DialogTitle>{t.addFor} {selectedDate}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label>Tipo</Label>
-              <Select
-                data-testid="task-type-select"
-                value={newTask.type}
-                onValueChange={(value) => setNewTask({ ...newTask, type: value })}
-              >
+              <Label>{t.type}</Label>
+              <Select value={newTask.type} onValueChange={(value) => setNewTask({ ...newTask, type: value })}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="task">Tarefa</SelectItem>
-                  <SelectItem value="holiday">Feriado</SelectItem>
-                  <SelectItem value="recess">Recesso</SelectItem>
+                  <SelectItem value="task">{t.task}</SelectItem>
+                  <SelectItem value="holiday">{t.holiday}</SelectItem>
+                  <SelectItem value="recess">{t.recess}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <Label htmlFor="title">Título *</Label>
+              <Label>{t.titleField} *</Label>
               <Input
-                data-testid="task-title-input"
-                id="title"
                 value={newTask.title}
                 onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                placeholder="Ex: Prova de Matemática"
+                placeholder={t.titlePlaceholder}
               />
             </div>
 
             {newTask.type === "task" && (
               <>
                 <div>
-                  <Label htmlFor="subject">Matéria *</Label>
+                  <Label>{t.subject} *</Label>
                   <Input
-                    data-testid="task-subject-input"
-                    id="subject"
                     value={newTask.subject}
                     onChange={(e) => setNewTask({ ...newTask, subject: e.target.value })}
-                    placeholder="Ex: Matemática"
+                    placeholder={t.subjectPlaceholder}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="description">Descrição (opcional)</Label>
+                  <Label>{t.description} ({t.optional})</Label>
                   <Textarea
-                    data-testid="task-description-input"
-                    id="description"
                     value={newTask.description}
                     onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                    placeholder="Detalhes sobre a tarefa..."
+                    placeholder={t.descriptionPlaceholder}
                     rows={3}
                   />
                 </div>
 
                 <div>
-                  <Label>Arquivos (opcional)</Label>
+                  <Label>{t.files} ({t.optional})</Label>
                   <div className="mt-2">
-                    <label
-                      htmlFor="file-upload"
-                      className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                    >
+                    <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-sm">
                       <Upload className="w-4 h-4" />
-                      Adicionar arquivo
+                      {t.addFile}
+                      <input
+                        type="file"
+                        multiple
+                        className="hidden"
+                        onChange={(e) => setUploadFiles([...uploadFiles, ...Array.from(e.target.files)])}
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif"
+                      />
                     </label>
-                    <input
-                      id="file-upload"
-                      data-testid="task-file-input"
-                      type="file"
-                      multiple
-                      className="hidden"
-                      onChange={(e) => setUploadFiles([...uploadFiles, ...Array.from(e.target.files)])}
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif"
-                    />
                   </div>
                   {uploadFiles.length > 0 && (
-                    <div className="mt-3 space-y-2">
+                    <div className="mt-2 space-y-1">
                       {uploadFiles.map((file, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800 rounded-lg"
-                        >
-                          <span className="text-sm truncate">{file.name}</span>
-                          <button
-                            onClick={() => setUploadFiles(uploadFiles.filter((_, i) => i !== index))}
-                            className="text-red-500 hover:text-red-700"
-                          >
+                        <div key={index} className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800 rounded text-sm">
+                          <span className="truncate flex-1">{file.name}</span>
+                          <button onClick={() => setUploadFiles(uploadFiles.filter((_, i) => i !== index))} className="text-red-500 ml-2">
                             <X className="w-4 h-4" />
                           </button>
                         </div>
@@ -862,8 +1112,10 @@ function App() {
               </>
             )}
 
-            <Button data-testid="save-task-button" onClick={handleSaveTask} className="w-full">
-              Salvar
+            <Button onClick={handleSaveTask} className="w-full" disabled={isSaving}>
+              {isSaving ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t.saving}</>
+              ) : t.save}
             </Button>
           </div>
         </DialogContent>
@@ -871,48 +1123,39 @@ function App() {
 
       {/* View Tasks Dialog */}
       <Dialog open={showViewTasks} onOpenChange={setShowViewTasks}>
-        <DialogContent data-testid="view-tasks-dialog" className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Tarefas de {selectedDate}</DialogTitle>
+            <DialogTitle>{t.tasksFor} {selectedDate}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-3 py-4">
             {selectedTasks.map((task) => (
               <div
                 key={task.id}
-                data-testid={`task-item-${task.id}`}
-                className={`p-4 rounded-lg border-2 ${
-                  task.type === "task"
-                    ? "bg-blue-50 dark:bg-blue-950/20 border-blue-500"
-                    : task.type === "holiday"
-                    ? "bg-green-50 dark:bg-green-950/20 border-green-500"
+                className={`p-3 rounded-lg border-2 ${
+                  task.type === "task" ? "bg-blue-50 dark:bg-blue-950/20 border-blue-500"
+                    : task.type === "holiday" ? "bg-green-50 dark:bg-green-950/20 border-green-500"
                     : "bg-red-50 dark:bg-red-950/20 border-red-500"
                 }`}
               >
                 <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg text-slate-900 dark:text-white">
-                      {task.title}
-                    </h3>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-slate-900 dark:text-white">{task.title}</h3>
                     {task.subject && (
-                      <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                        Matéria: {task.subject}
-                      </p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{t.subject}: {task.subject}</p>
                     )}
                     {task.description && (
-                      <p className="text-sm text-slate-700 dark:text-slate-300 mt-2">
-                        {task.description}
-                      </p>
+                      <p className="text-sm text-slate-700 dark:text-slate-300 mt-2">{task.description}</p>
                     )}
                     {task.files && task.files.length > 0 && (
-                      <div className="mt-3 space-y-2">
+                      <div className="mt-2 space-y-1">
                         {task.files.map((file, index) => (
                           <a
                             key={index}
                             href={`${API}/files/${file.filename}`}
                             download={file.originalName}
-                            className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                            className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
                           >
-                            <Download className="w-4 h-4" />
+                            <Download className="w-3 h-3" />
                             {file.originalName}
                           </a>
                         ))}
@@ -920,12 +1163,8 @@ function App() {
                     )}
                   </div>
                   {isAuthenticated && (
-                    <button
-                      data-testid={`delete-task-${task.id}`}
-                      onClick={() => handleDeleteTask(task.id)}
-                      className="text-red-500 hover:text-red-700 ml-4"
-                    >
-                      <Trash2 className="w-5 h-5" />
+                    <button onClick={() => handleDeleteTask(task.id)} className="text-red-500 hover:text-red-700 ml-2">
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   )}
                 </div>
@@ -933,15 +1172,11 @@ function App() {
             ))}
             {isAuthenticated && (
               <Button
-                data-testid="add-another-task-button"
-                onClick={() => {
-                  setShowViewTasks(false);
-                  setShowAddTask(true);
-                }}
+                onClick={() => { setShowViewTasks(false); setShowAddTask(true); }}
                 variant="outline"
                 className="w-full"
               >
-                Adicionar outra tarefa
+                {t.addAnotherTask}
               </Button>
             )}
           </div>
