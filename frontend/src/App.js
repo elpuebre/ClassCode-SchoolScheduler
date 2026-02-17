@@ -780,8 +780,8 @@ function App() {
                 const hasRecess = dayTasks.some(t => t.type === "recess");
                 
                 if (!day) {
-                  // Dia vazio - sem quadradinho
-                  return <div key={index} className="aspect-square" />;
+                  // Dia vazio - COM quadradinho branco e borda
+                  return <div key={index} className="aspect-square rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700" />;
                 }
                 
                 return (
@@ -790,9 +790,8 @@ function App() {
                     onClick={() => handleDayClick(day)}
                     className={`
                       aspect-square p-1 sm:p-2 rounded-lg cursor-pointer transition-all relative
-                      bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700
-                      hover:border-blue-400 hover:shadow-md
-                      ${isToday(day) ? "ring-2 ring-blue-500" : ""}
+                      hover:bg-slate-100 dark:hover:bg-slate-800
+                      ${isToday(day) ? "ring-2 ring-blue-500 bg-white dark:bg-slate-900" : ""}
                     `}
                   >
                     {/* Número no canto superior esquerdo */}
