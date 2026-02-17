@@ -771,7 +771,7 @@ function App() {
             </div>
 
             {/* Calendar Days */}
-            <div className="grid grid-cols-7 gap-[1px] sm:gap-1 p-1 sm:p-2 bg-slate-100 dark:bg-slate-800">
+            <div className="grid grid-cols-7 gap-1 sm:gap-2 p-2 sm:p-3">
               {days.map((day, index) => {
                 const date = day ? formatDate(day) : "";
                 const dayTasks = day ? getTasksForDate(date) : [];
@@ -779,33 +779,34 @@ function App() {
                 const hasHoliday = dayTasks.some(t => t.type === "holiday");
                 const hasRecess = dayTasks.some(t => t.type === "recess");
                 
+                if (!day) {
+                  // Dia vazio - sem quadradinho
+                  return <div key={index} className="aspect-square" />;
+                }
+                
                 return (
                   <div
                     key={index}
-                    onClick={() => day && handleDayClick(day)}
+                    onClick={() => handleDayClick(day)}
                     className={`
-                      aspect-square p-1 sm:p-2 rounded cursor-pointer transition-all relative
+                      aspect-square p-1 sm:p-2 rounded-lg cursor-pointer transition-all relative
                       bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700
-                      ${day ? "hover:border-blue-400 hover:shadow-md" : ""}
-                      ${day && isToday(day) ? "ring-2 ring-blue-500" : ""}
+                      hover:border-blue-400 hover:shadow-md
+                      ${isToday(day) ? "ring-2 ring-blue-500" : ""}
                     `}
                   >
-                    {day && (
-                      <>
-                        {/* Número no canto superior esquerdo */}
-                        <span className={`text-xs sm:text-sm font-medium ${isToday(day) ? "text-blue-600 dark:text-blue-400 font-bold" : "text-slate-900 dark:text-white"}`}>
-                          {day}
-                        </span>
-                        
-                        {/* Bolinhas no canto inferior direito */}
-                        {dayTasks.length > 0 && (
-                          <div className="absolute bottom-1 right-1 flex gap-[2px]">
-                            {hasTask && <div className="w-2 h-2 rounded-full bg-blue-500" />}
-                            {hasHoliday && <div className="w-2 h-2 rounded-full bg-green-500" />}
-                            {hasRecess && <div className="w-2 h-2 rounded-full bg-red-500" />}
-                          </div>
-                        )}
-                      </>
+                    {/* Número no canto superior esquerdo */}
+                    <span className={`text-xs sm:text-sm font-medium ${isToday(day) ? "text-blue-600 dark:text-blue-400 font-bold" : "text-slate-900 dark:text-white"}`}>
+                      {day}
+                    </span>
+                    
+                    {/* Bolinhas no canto inferior direito */}
+                    {dayTasks.length > 0 && (
+                      <div className="absolute bottom-1 right-1 flex gap-[2px]">
+                        {hasTask && <div className="w-2 h-2 rounded-full bg-blue-500" />}
+                        {hasHoliday && <div className="w-2 h-2 rounded-full bg-green-500" />}
+                        {hasRecess && <div className="w-2 h-2 rounded-full bg-red-500" />}
+                      </div>
                     )}
                   </div>
                 );
