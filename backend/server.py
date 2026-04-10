@@ -86,6 +86,10 @@ class TaskFile(BaseModel):
     filename: str
     originalName: str
 
+class ScheduleUpdate(BaseModel):
+    periods: list = []
+    grid: dict = {}
+
 # Create room
 @api_router.post("/rooms/create")
 async def create_room(input: RoomCreate):
@@ -172,6 +176,29 @@ async def delete_task(room_code: str, task_id: str, password: Optional[str] = He
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Tarefa não encontrada")
     
+    return {"success": True}
+
+# Get schedule for a room
+@api_router.get("/schedules/{room_code}")
+async def get_schedule(room_code: str):
+    schedule = await db.schedules.find_one({"roomCode": room_code}, {"_id": 0})
+    if not schedule:
+        return {"roomCode": room_code, "periods": [], "grid": {}}
+    return schedule
+
+# Update schedule for a room
+@api_router.put("/schedules/{room_code}")
+async def update_schedule(room_code: str, input_data: ScheduleUpdate, password: Optional[str] = Header(None)):
+    room = await db.rooms.find_one({"code": room_code}, {"_id": 0})
+    if not room:
+        raise HTTPException(status_code=404, detail="Sala não encontrada")
+    if password != room["password"]:
+        raise HTTPException(status_code=403, detail="Senha inválida")
+    await db.schedules.update_one(
+        {"roomCode": room_code},
+        {"$set": {"roomCode": room_code, "periods": input_data.periods, "grid": input_data.grid}},
+        upsert=True
+    )
     return {"success": True}
 
 # Upload file

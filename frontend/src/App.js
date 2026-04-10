@@ -109,6 +109,19 @@ const translations = {
     loading: "Carregando...",
     creating: "Criando...",
     joining: "Entrando...",
+    calendar: "Calendário",
+    schedule: "Horários",
+    scheduleTitle: "Horários de Aula",
+    noSchedule: "Nenhum horário cadastrado.",
+    createSchedule: "Criar Horário",
+    editSchedule: "Editar",
+    saveSchedule: "Salvar",
+    cancelEdit: "Cancelar",
+    addPeriod: "Adicionar Horário",
+    scheduleSaved: "Horários salvos!",
+    scheduleError: "Erro ao salvar horários!",
+    scheduleDays: ["Seg", "Ter", "Qua", "Qui", "Sex"],
+    periodLabel: "Horário",
     monthNames: ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"],
     weekDays: ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
   },
@@ -204,6 +217,19 @@ const translations = {
     loading: "Loading...",
     creating: "Creating...",
     joining: "Joining...",
+    calendar: "Calendar",
+    schedule: "Schedule",
+    scheduleTitle: "Class Schedule",
+    noSchedule: "No schedule set up yet.",
+    createSchedule: "Create Schedule",
+    editSchedule: "Edit",
+    saveSchedule: "Save",
+    cancelEdit: "Cancel",
+    addPeriod: "Add Period",
+    scheduleSaved: "Schedule saved!",
+    scheduleError: "Error saving schedule!",
+    scheduleDays: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+    periodLabel: "Period",
     monthNames: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
     weekDays: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
   }
@@ -239,6 +265,12 @@ function App() {
   const [announcements, setAnnouncements] = useState([]);
   const [newAnnouncement, setNewAnnouncement] = useState("");
   const [showAddAnnouncement, setShowAddAnnouncement] = useState(false);
+  
+  // Schedule state
+  const [activeTab, setActiveTab] = useState("calendar");
+  const [schedule, setSchedule] = useState({ periods: [], grid: {} });
+  const [editingSchedule, setEditingSchedule] = useState(false);
+  const [tempSchedule, setTempSchedule] = useState({ periods: [], grid: {} });
   
   const [tasks, setTasks] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -276,11 +308,13 @@ function App() {
     
     const savedRoom = localStorage.getItem("currentRoom");
     if (savedRoom) {
-      const roomData = JSON.parse(savedRoom);
-      setCurrentRoom(roomData);
-      setShowRoomSelection(false);
-      loadTasks(roomData.code);
-      loadAnnouncements(roomData.code);
+      try {
+        const roomData = JSON.parse(savedRoom);
+        setCurrentRoom(roomData);
+        setShowRoomSelection(false);
+      } catch (e) {
+        localStorage.removeItem("currentRoom");
+      }
     }
   }, []);
   
@@ -288,15 +322,19 @@ function App() {
     if (currentRoom) {
       loadTasks(currentRoom.code);
       loadAnnouncements(currentRoom.code);
+      loadSchedule(currentRoom.code);
     }
   }, [currentRoom]);
 
-  const loadTasks = async (roomCode) => {
+  const loadTasks = async (roomCode, retry = true) => {
     try {
       const response = await axios.get(`${API}/tasks/${roomCode}`);
       setTasks(response.data);
     } catch (error) {
       console.error("Error loading tasks:", error);
+      if (retry) {
+        setTimeout(() => loadTasks(roomCode, false), 1500);
+      }
     }
   };
 
@@ -306,6 +344,29 @@ function App() {
       setAnnouncements(JSON.parse(saved));
     } else {
       setAnnouncements([]);
+    }
+  };
+
+  const loadSchedule = async (roomCode) => {
+    try {
+      const response = await axios.get(`${API}/schedules/${roomCode}`);
+      setSchedule(response.data);
+    } catch (error) {
+      console.error("Error loading schedule:", error);
+    }
+  };
+
+  const handleSaveSchedule = async () => {
+    try {
+      const storedPassword = sessionStorage.getItem(`roomPassword_${currentRoom.code}`);
+      await axios.put(`${API}/schedules/${currentRoom.code}`, {
+        periods: tempSchedule.periods, grid: tempSchedule.grid
+      }, { headers: { password: storedPassword } });
+      setSchedule({ ...tempSchedule, roomCode: currentRoom.code });
+      setEditingSchedule(false);
+      toast.success(t.scheduleSaved);
+    } catch (error) {
+      toast.error(t.scheduleError);
     }
   };
 
@@ -397,6 +458,9 @@ function App() {
     setShowRoomSelection(true);
     setTasks([]);
     setAnnouncements([]);
+    setActiveTab("calendar");
+    setSchedule({ periods: [], grid: {} });
+    setEditingSchedule(false);
   };
 
   const toggleTheme = () => {
@@ -559,6 +623,13 @@ function App() {
     const month = String(currentMonth.getMonth() + 1).padStart(2, "0");
     const d = String(day).padStart(2, "0");
     return `${year}-${month}-${d}`;
+  };
+
+  const formatDisplayDate = (dateStr) => {
+    if (!dateStr) return "";
+    const [year, month, day] = dateStr.split("-");
+    if (language === "en") return `${month}/${day}/${year}`;
+    return `${day}/${month}/${year}`;
   };
 
   const getTasksForDate = (date) => {
@@ -753,6 +824,117 @@ function App() {
       {/* Calendar */}
       <main className="px-2 sm:px-6 py-4 pb-24">
         <div className="max-w-4xl mx-auto">
+          {/* Tab Switcher */}
+          <div className="flex gap-2 mb-4">
+            <button onClick={() => setActiveTab("calendar")} className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-sm transition-all ${activeTab === "calendar" ? "bg-blue-500 text-white shadow-lg" : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700"}`}>
+              {t.calendar}
+            </button>
+            <button onClick={() => setActiveTab("schedule")} className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-sm transition-all ${activeTab === "schedule" ? "bg-blue-500 text-white shadow-lg" : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700"}`}>
+              {t.schedule}
+            </button>
+          </div>
+
+          {/* Schedule View */}
+          {activeTab === "schedule" && (
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 px-3 sm:px-6 py-4 flex justify-between items-center">
+                <h2 className="text-base sm:text-xl font-semibold text-white">{t.scheduleTitle}</h2>
+                {!editingSchedule ? (
+                  <Button variant="ghost" size="sm" className="text-white hover:bg-white/20" onClick={() => requireAuth(() => { setTempSchedule(JSON.parse(JSON.stringify(schedule))); setEditingSchedule(true); })}>
+                    {t.editSchedule}
+                  </Button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" className="text-white hover:bg-white/20" onClick={handleSaveSchedule}>{t.saveSchedule}</Button>
+                    <Button variant="ghost" size="sm" className="text-white hover:bg-white/20" onClick={() => setEditingSchedule(false)}>{t.cancelEdit}</Button>
+                  </div>
+                )}
+              </div>
+              <div className="p-3 sm:p-4 overflow-x-auto">
+                {(editingSchedule ? tempSchedule : schedule).periods.length === 0 ? (
+                  <div className="text-center py-12 text-slate-500 dark:text-slate-400">
+                    <p className="mb-4">{t.noSchedule}</p>
+                    {!editingSchedule && (
+                      <Button variant="outline" onClick={() => requireAuth(() => {
+                        setTempSchedule({
+                          periods: [
+                            { label: "1°", start: "07:00", end: "07:50" },
+                            { label: "2°", start: "07:50", end: "08:40" },
+                            { label: "3°", start: "08:40", end: "09:30" },
+                            { label: "Intervalo", start: "09:30", end: "09:50" },
+                            { label: "4°", start: "09:50", end: "10:40" },
+                            { label: "5°", start: "10:40", end: "11:30" },
+                          ],
+                          grid: {}
+                        });
+                        setEditingSchedule(true);
+                      })}>
+                        <Plus className="w-4 h-4 mr-2" />{t.createSchedule}
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <table className="w-full border-collapse min-w-[550px]">
+                    <thead>
+                      <tr>
+                        <th className="border border-slate-200 dark:border-slate-700 p-2 bg-slate-50 dark:bg-slate-800 text-left text-xs font-medium text-slate-700 dark:text-slate-300 min-w-[120px]">{t.periodLabel}</th>
+                        {t.scheduleDays.map((day, i) => (
+                          <th key={i} className="border border-slate-200 dark:border-slate-700 p-2 bg-slate-50 dark:bg-slate-800 text-center text-xs font-medium text-slate-700 dark:text-slate-300 min-w-[80px]">{day}</th>
+                        ))}
+                        {editingSchedule && <th className="border border-slate-200 dark:border-slate-700 p-1 bg-slate-50 dark:bg-slate-800 w-8" />}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(editingSchedule ? tempSchedule : schedule).periods.map((period, pIdx) => (
+                        <tr key={pIdx}>
+                          <td className="border border-slate-200 dark:border-slate-700 p-2">
+                            {editingSchedule ? (
+                              <div className="flex flex-col gap-1">
+                                <Input className="h-7 text-xs" value={period.label} placeholder="Nome" onChange={(e) => { const np = [...tempSchedule.periods]; np[pIdx] = { ...period, label: e.target.value }; setTempSchedule({ ...tempSchedule, periods: np }); }} />
+                                <div className="flex gap-1">
+                                  <Input type="time" className="h-7 text-xs flex-1" value={period.start} onChange={(e) => { const np = [...tempSchedule.periods]; np[pIdx] = { ...period, start: e.target.value }; setTempSchedule({ ...tempSchedule, periods: np }); }} />
+                                  <Input type="time" className="h-7 text-xs flex-1" value={period.end} onChange={(e) => { const np = [...tempSchedule.periods]; np[pIdx] = { ...period, end: e.target.value }; setTempSchedule({ ...tempSchedule, periods: np }); }} />
+                                </div>
+                              </div>
+                            ) : (
+                              <div>
+                                <span className="font-medium text-sm text-slate-800 dark:text-slate-200">{period.label}</span>
+                                <br /><span className="text-xs text-slate-500 dark:text-slate-400">{period.start} - {period.end}</span>
+                              </div>
+                            )}
+                          </td>
+                          {[0, 1, 2, 3, 4].map((dayIdx) => (
+                            <td key={dayIdx} className="border border-slate-200 dark:border-slate-700 p-2 text-center">
+                              {editingSchedule ? (
+                                <Input className="h-7 text-xs text-center" value={tempSchedule.grid[`${pIdx}-${dayIdx}`] || ""} placeholder="-" onChange={(e) => { const ng = { ...tempSchedule.grid }; if (e.target.value) ng[`${pIdx}-${dayIdx}`] = e.target.value; else delete ng[`${pIdx}-${dayIdx}`]; setTempSchedule({ ...tempSchedule, grid: ng }); }} />
+                              ) : (
+                                <span className="text-sm text-slate-700 dark:text-slate-300">{schedule.grid[`${pIdx}-${dayIdx}`] || "-"}</span>
+                              )}
+                            </td>
+                          ))}
+                          {editingSchedule && (
+                            <td className="border border-slate-200 dark:border-slate-700 p-1 text-center">
+                              <button onClick={() => { const np = tempSchedule.periods.filter((_, i) => i !== pIdx); const ng = {}; Object.entries(tempSchedule.grid).forEach(([key, val]) => { const [p, d] = key.split("-").map(Number); if (p < pIdx) ng[`${p}-${d}`] = val; else if (p > pIdx) ng[`${p-1}-${d}`] = val; }); setTempSchedule({ periods: np, grid: ng }); }} className="text-red-500 hover:text-red-700 p-1">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+                {editingSchedule && (
+                  <Button variant="outline" className="w-full mt-3" onClick={() => { const np = [...tempSchedule.periods, { label: `${tempSchedule.periods.length + 1}°`, start: "", end: "" }]; setTempSchedule({ ...tempSchedule, periods: np }); }}>
+                    <Plus className="w-4 h-4 mr-2" />{t.addPeriod}
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Calendar View */}
+          {activeTab === "calendar" && (
           <div className="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
             {/* Calendar Header */}
             <div className="bg-gradient-to-r from-blue-500 to-indigo-600 px-3 sm:px-6 py-4 flex justify-between items-center">
@@ -791,11 +973,11 @@ function App() {
                     className={`
                       aspect-square p-1 sm:p-2 rounded-lg cursor-pointer transition-all relative
                       hover:bg-slate-100 dark:hover:bg-slate-800
-                      ${isToday(day) ? "ring-2 ring-blue-500 bg-white dark:bg-slate-900" : ""}
+                      ${isToday(day) ? "ring-2 ring-slate-900 dark:ring-white bg-white dark:bg-slate-900" : ""}
                     `}
                   >
                     {/* Número no canto superior esquerdo */}
-                    <span className={`text-xs sm:text-sm font-medium ${isToday(day) ? "text-blue-600 dark:text-blue-400 font-bold" : "text-slate-900 dark:text-white"}`}>
+                    <span className={`text-xs sm:text-sm font-medium ${isToday(day) ? "text-slate-900 dark:text-white font-bold" : "text-slate-900 dark:text-white"}`}>
                       {day}
                     </span>
                     
@@ -819,6 +1001,7 @@ function App() {
               <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-red-500" /><span className="text-slate-600 dark:text-slate-400">{t.recess}</span></div>
             </div>
           </div>
+          )}
         </div>
       </main>
 
@@ -842,15 +1025,12 @@ function App() {
       <Dialog open={showAnnouncements} onOpenChange={setShowAnnouncements}>
         <DialogContent className="max-w-[95vw] sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              <span className="flex items-center gap-2"><Bell className="w-5 h-5 text-amber-500" />{t.announcementsTitle}</span>
-              {isAuthenticated && (
-                <Button size="sm" onClick={() => setShowAddAnnouncement(true)}><Plus className="w-4 h-4" /></Button>
-              )}
+            <DialogTitle className="flex items-center gap-2">
+              <Bell className="w-5 h-5 text-amber-500" />{t.announcementsTitle}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-4 max-h-[60vh] overflow-y-auto">
-            {announcements.length === 0 ? (
+            {announcements.length === 0 && !showAddAnnouncement ? (
               <p className="text-center text-slate-500 text-sm">{t.noAnnouncements}</p>
             ) : (
               announcements.map(a => (
@@ -865,7 +1045,7 @@ function App() {
                 </div>
               ))
             )}
-            {showAddAnnouncement && (
+            {showAddAnnouncement ? (
               <div className="p-3 border border-slate-200 dark:border-slate-700 rounded-lg space-y-2">
                 <Textarea value={newAnnouncement} onChange={e => setNewAnnouncement(e.target.value)} placeholder={t.announcementPlaceholder} rows={2} />
                 <div className="flex gap-2">
@@ -873,6 +1053,10 @@ function App() {
                   <Button size="sm" variant="outline" onClick={() => setShowAddAnnouncement(false)}>Cancelar</Button>
                 </div>
               </div>
+            ) : (
+              <Button variant="outline" className="w-full" onClick={() => requireAuth(() => setShowAddAnnouncement(true))}>
+                <Plus className="w-4 h-4 mr-2" />{t.addAnnouncement}
+              </Button>
             )}
           </div>
         </DialogContent>
@@ -952,7 +1136,7 @@ function App() {
       {/* Add Task Dialog */}
       <Dialog open={showAddTask} onOpenChange={setShowAddTask}>
         <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>{t.addFor} {selectedDate}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t.addFor} {formatDisplayDate(selectedDate)}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-4">
             <div>
               <Label>{t.type}</Label>
@@ -1010,7 +1194,7 @@ function App() {
       {/* View Tasks Dialog */}
       <Dialog open={showViewTasks} onOpenChange={setShowViewTasks}>
         <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>{t.tasksFor} {selectedDate}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{formatDisplayDate(selectedDate)}</DialogTitle></DialogHeader>
           <div className="space-y-3 py-4">
             {selectedTasks.map((task) => (
               <div key={task.id} className={`p-3 rounded-lg border-2 ${
@@ -1039,9 +1223,9 @@ function App() {
                 </div>
               </div>
             ))}
-            {isAuthenticated && (
-              <Button onClick={() => { setShowViewTasks(false); setShowAddTask(true); }} variant="outline" className="w-full">{t.addAnotherTask}</Button>
-            )}
+            <Button onClick={() => { setShowViewTasks(false); requireAuth(() => setShowAddTask(true)); }} variant="outline" className="w-full">
+              <Plus className="w-4 h-4 mr-2" />{t.addAnotherTask}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
